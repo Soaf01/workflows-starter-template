@@ -1,76 +1,81 @@
 /**
- * Regenerates the brand icon set from a single source design.
- *
+ * Regenerates the app icon set from a single source design.
  *   node scripts/generate-icons.mjs   (or: npm run icons)
  *
- * Writes public/favicon.svg plus the PNG PWA icons under public/icons/.
- * Requires `sharp` (dev-only). Everything is drawn here — no external images.
+ * A brand-neutral gold "wheat ear" mark on a dark tile — swap the colours or
+ * the mark to match a client. Writes public/favicon.svg + PNG PWA icons.
+ * Requires `sharp` (dev-only). No external images.
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import sharp from "sharp";
 
+const GOLD = "#d9b26a";
+const GOLD_SOFT = "#eccd84";
+const GOLD_DEEP = "#b6893f";
+
+const defs = `
+	<defs>
+		<radialGradient id="tile" cx="42%" cy="34%" r="80%">
+			<stop offset="0%" stop-color="#2a1f16" />
+			<stop offset="60%" stop-color="#15100b" />
+			<stop offset="100%" stop-color="#0c0906" />
+		</radialGradient>
+		<linearGradient id="grain" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="${GOLD_SOFT}" />
+			<stop offset="100%" stop-color="${GOLD_DEEP}" />
+		</linearGradient>
+	</defs>`;
+
+function wheat() {
+	let g = `<path d="M256 452 L256 176" stroke="${GOLD}" stroke-width="11" stroke-linecap="round" fill="none"/>`;
+	// base leaves
+	g += `<path d="M256 368 C224 364 206 380 196 402 C230 402 250 392 256 374 Z" fill="${GOLD_DEEP}"/>`;
+	g += `<path d="M256 368 C288 364 306 380 316 402 C282 402 262 392 256 374 Z" fill="${GOLD_DEEP}"/>`;
+	// grains up both sides
+	const levels = [
+		[304, 27],
+		[280, 26],
+		[256, 25],
+		[232, 23],
+		[210, 21],
+		[190, 19],
+	];
+	for (const [y, r] of levels) {
+		g += `<ellipse cx="236" cy="${y - 8}" rx="11" ry="${r}" transform="rotate(-34 236 ${y - 8})" fill="url(#grain)"/>`;
+		g += `<ellipse cx="276" cy="${y - 8}" rx="11" ry="${r}" transform="rotate(34 276 ${y - 8})" fill="url(#grain)"/>`;
+	}
+	// crowning grain
+	g += `<ellipse cx="256" cy="160" rx="12" ry="30" fill="url(#grain)"/>`;
+	return g;
+}
+
+const mark = wheat();
+
+const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bakehouse">${defs}
+	<rect width="512" height="512" rx="116" fill="url(#tile)" />
+	<rect x="30" y="30" width="452" height="452" rx="92" fill="none" stroke="${GOLD}" stroke-opacity="0.35" stroke-width="4" />
+	${mark}
+</svg>`;
+
+const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${defs}
+	<rect width="512" height="512" fill="url(#tile)" />
+	<g transform="translate(256 256) scale(0.78) translate(-256 -256)">${mark}</g>
+</svg>`;
+
 const root = process.cwd();
 const publicDir = path.join(root, "public");
 const iconsDir = path.join(publicDir, "icons");
 await mkdir(iconsDir, { recursive: true });
 
-// Shared, centred artwork: a crescent moon cradling a honey drop + sparkles.
-const defs = `
-	<defs>
-		<radialGradient id="honey" cx="38%" cy="30%" r="82%">
-			<stop offset="0%" stop-color="#f7d081" />
-			<stop offset="55%" stop-color="#eaa945" />
-			<stop offset="100%" stop-color="#cf8422" />
-		</radialGradient>
-		<linearGradient id="drop" x1="0" y1="0" x2="0" y2="1">
-			<stop offset="0%" stop-color="#fbe9b8" />
-			<stop offset="45%" stop-color="#f0b64e" />
-			<stop offset="100%" stop-color="#d98a26" />
-		</linearGradient>
-	</defs>`;
-
-const content = `
-	<path fill-rule="evenodd" fill="#fff6e6"
-		d="M116,252 a140,140 0 1,0 280,0 a140,140 0 1,0 -280,0 Z
-		   M190,230 a126,126 0 1,1 252,0 a126,126 0 1,1 -252,0 Z" />
-	<path d="M280,150 C280,150 340,232 340,280 a58,58 0 1,1 -116,0 C224,232 280,150 280,150 Z"
-		fill="url(#drop)" stroke="#b9741d" stroke-width="5" />
-	<ellipse cx="264" cy="280" rx="13" ry="20" fill="#fff3d4" opacity="0.7" />
-	<path d="M162 158 l7 18 18 7 -18 7 -7 18 -7 -18 -18 -7 18 -7 z" fill="#fff7e6" opacity="0.9" />
-	<circle cx="360" cy="152" r="8" fill="#fff7e6" opacity="0.85" />`;
-
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Maison Miellune">${defs}
-	<rect width="512" height="512" rx="116" fill="url(#honey)" />
-	<rect width="512" height="512" rx="116" fill="#000" opacity="0.04" />
-	${content}
-</svg>`;
-
-// Maskable / apple: full-bleed square so platform cropping never bites content.
-const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${defs}
-	<rect width="512" height="512" fill="url(#honey)" />
-	<g transform="translate(256 256) scale(0.82) translate(-256 -256)">${content}</g>
-</svg>`;
-
-async function render(svg, size) {
-	return sharp(Buffer.from(svg), { density: 512 })
-		.resize(size, size)
-		.png()
-		.toBuffer();
-}
+const render = (svg, size) =>
+	sharp(Buffer.from(svg), { density: 512 }).resize(size, size).png().toBuffer();
 
 await writeFile(path.join(publicDir, "favicon.svg"), `${faviconSvg}\n`);
-
 await writeFile(path.join(iconsDir, "icon-192.png"), await render(faviconSvg, 192));
 await writeFile(path.join(iconsDir, "icon-512.png"), await render(faviconSvg, 512));
-await writeFile(
-	path.join(iconsDir, "icon-maskable-512.png"),
-	await render(maskableSvg, 512),
-);
-await writeFile(
-	path.join(iconsDir, "apple-touch-icon.png"),
-	await render(maskableSvg, 180),
-);
+await writeFile(path.join(iconsDir, "icon-maskable-512.png"), await render(maskableSvg, 512));
+await writeFile(path.join(iconsDir, "apple-touch-icon.png"), await render(maskableSvg, 180));
 
 console.log("✓ Wrote favicon.svg + 4 PNG icons to public/");

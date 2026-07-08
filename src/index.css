@@ -3,145 +3,129 @@
 @tailwind utilities;
 
 @layer base {
+	/* Default palette (Aurelia). main.tsx overrides these from the active
+	   client config, but defining them here keeps the first paint correct. */
 	:root {
-		font-family: theme("fontFamily.sans");
-		line-height: 1.6;
-		font-weight: 400;
-		color: theme("colors.cocoa.800");
-		background-color: theme("colors.cream.100");
+		--bg: #0e0b08;
+		--bg-elevated: #17100a;
+		--surface: #1d150f;
+		--surface-alt: #271b12;
+		--text: #f5efe6;
+		--text-muted: #a89583;
+		--gold: #d9b26a;
+		--gold-soft: #eccd84;
+		--accent: #c56d4e;
+		--line: rgba(217, 178, 106, 0.18);
+		/* RGB channel triplets (kept in sync with the hex vars above). */
+		--bg-rgb: 14 11 8;
+		--bg-elevated-rgb: 23 16 10;
+		--surface-rgb: 29 21 15;
+		--surface-alt-rgb: 39 27 18;
+		--text-rgb: 245 239 230;
+		--text-muted-rgb: 168 149 131;
+		--gold-rgb: 217 178 106;
+		--gold-soft-rgb: 236 205 132;
+		--accent-rgb: 197 109 78;
+		--radius: 22px;
+		--font-display: "Playfair Display", Georgia, serif;
+		--font-body: "Raleway", system-ui, sans-serif;
+		--font-mono: "DM Mono", ui-monospace, monospace;
 
-		font-synthesis: none;
-		text-rendering: optimizeLegibility;
+		font-family: var(--font-body);
+		color: var(--text);
+		background-color: #07050340;
+		line-height: 1.55;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
-	}
-
-	@media (prefers-color-scheme: dark) {
-		:root {
-			color: theme("colors.cream.200");
-			background-color: theme("colors.cocoa.900");
-		}
+		text-rendering: optimizeLegibility;
 	}
 
 	body {
 		margin: 0;
-		min-height: 100vh;
+		min-height: 100dvh;
+		background: #060403;
 		overflow-x: hidden;
 	}
 
-	h1,
-	h2,
-	h3,
-	h4 {
-		font-family: theme("fontFamily.serif");
+	h1, h2, h3, h4 {
+		font-family: var(--font-display);
 		font-weight: 600;
 		letter-spacing: -0.01em;
+		line-height: 1.12;
 	}
 
 	:focus-visible {
-		outline: 2px solid theme("colors.honey.500");
-		outline-offset: 3px;
-		border-radius: 6px;
+		outline: 2px solid var(--gold);
+		outline-offset: 2px;
+		border-radius: 8px;
 	}
 
-	/* Respect reduced-motion for every decorative animation. */
 	@media (prefers-reduced-motion: reduce) {
-		*,
-		*::before,
-		*::after {
+		*, *::before, *::after {
 			animation-duration: 0.001ms !important;
 			animation-iteration-count: 1 !important;
 			transition-duration: 0.001ms !important;
 			scroll-behavior: auto !important;
 		}
 	}
-
-	html {
-		scroll-behavior: smooth;
-	}
 }
 
 @layer components {
-	.eyebrow {
-		@apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-honey-700 dark:text-honey-300;
+	.kicker {
+		@apply inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gold;
 	}
 
 	.btn {
-		@apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
+		@apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
 	}
-
 	.btn-primary {
-		@apply btn bg-honey-500 text-cocoa-900 shadow-soft hover:bg-honey-400 hover:shadow-glow;
+		@apply btn text-[#241a10];
+		background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+		box-shadow: 0 10px 30px -12px rgba(217, 178, 106, 0.5);
 	}
-
 	.btn-ghost {
-		@apply btn border border-cocoa-900/15 bg-white/60 text-cocoa-800 backdrop-blur hover:border-honey-500/60 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-cream-100 dark:hover:bg-white/10;
+		@apply btn border border-line bg-white/[0.03] text-ink hover:bg-white/[0.07];
+	}
+	.btn-dark {
+		@apply btn bg-white/[0.06] text-ink hover:bg-white/[0.1] border border-line;
 	}
 
 	.card {
-		@apply rounded-3xl border border-cocoa-900/10 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04];
+		@apply rounded-app border border-line bg-surface;
 	}
 
-	.section-pad {
-		@apply px-5 py-20 sm:px-8 md:py-28;
+	.chip {
+		@apply whitespace-nowrap rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold transition-colors;
+	}
+	.chip-active {
+		@apply border-transparent text-[#241a10];
+		background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+	}
+
+	.field {
+		@apply w-full rounded-2xl border border-line bg-black/20 px-4 py-3 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-gold;
+	}
+
+	.screen-pad {
+		@apply px-4 pb-28 pt-2;
 	}
 }
 
 @layer utilities {
-	.text-balance {
-		text-wrap: balance;
-	}
+	.no-scrollbar::-webkit-scrollbar { display: none; }
+	.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-	.text-gradient-honey {
-		@apply bg-gradient-to-br from-honey-400 via-honey-600 to-berry-500 bg-clip-text text-transparent;
-	}
+	.text-balance { text-wrap: balance; }
 
-	.paper-texture {
-		background-image:
-			radial-gradient(
-				circle at 1px 1px,
-				rgba(74, 53, 39, 0.05) 1px,
-				transparent 0
-			);
-		background-size: 22px 22px;
-	}
+	.safe-b { padding-bottom: env(safe-area-inset-bottom); }
+	.safe-t { padding-top: env(safe-area-inset-top); }
 
-	.mask-fade-b {
-		-webkit-mask-image: linear-gradient(to bottom, black 72%, transparent);
-		mask-image: linear-gradient(to bottom, black 72%, transparent);
+	.grain {
+		background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+		background-size: 18px 18px;
 	}
-
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-}
-
-/* Gallery marquee */
-@keyframes marquee {
-	from {
-		transform: translateX(0);
-	}
-	to {
-		transform: translateX(-50%);
-	}
-}
-.animate-marquee {
-	animation: marquee 42s linear infinite;
-}
-.animate-marquee-rev {
-	animation: marquee 52s linear infinite reverse;
-}
-.marquee-group:hover .animate-marquee,
-.marquee-group:hover .animate-marquee-rev {
-	animation-play-state: paused;
-}
-@media (prefers-reduced-motion: reduce) {
-	.animate-marquee,
-	.animate-marquee-rev {
-		animation: none;
+	.mask-b {
+		-webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+		mask-image: linear-gradient(to bottom, black 60%, transparent);
 	}
 }

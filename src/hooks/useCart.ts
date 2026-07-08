@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CartLine } from "../types";
-import { treatById } from "../data/menu";
+import { config, productById } from "../config";
 
-const KEY = "miellune-cart-v1";
+const KEY = `${config.slug}-cart-v1`;
 
 function load(): CartLine[] {
 	try {
@@ -17,7 +17,7 @@ function load(): CartLine[] {
 						typeof (x as CartLine).id === "string" &&
 						typeof (x as CartLine).quantity === "number",
 				)
-				.filter((x) => treatById(x.id));
+				.filter((x) => productById(x.id));
 		}
 	} catch {
 		/* ignore corrupt storage */
@@ -47,7 +47,7 @@ export function useCart(): CartApi {
 	}, [lines]);
 
 	const add = useCallback((id: string, qty = 1) => {
-		if (!treatById(id)) return;
+		if (!productById(id)) return;
 		setLines((prev) => {
 			const found = prev.find((l) => l.id === id);
 			if (found) {
@@ -63,9 +63,7 @@ export function useCart(): CartApi {
 		setLines((prev) =>
 			qty <= 0
 				? prev.filter((l) => l.id !== id)
-				: prev.map((l) =>
-						l.id === id ? { ...l, quantity: Math.min(99, qty) } : l,
-					),
+				: prev.map((l) => (l.id === id ? { ...l, quantity: Math.min(99, qty) } : l)),
 		);
 	}, []);
 
@@ -75,15 +73,12 @@ export function useCart(): CartApi {
 
 	const clear = useCallback(() => setLines([]), []);
 
-	const count = useMemo(
-		() => lines.reduce((s, l) => s + l.quantity, 0),
-		[lines],
-	);
+	const count = useMemo(() => lines.reduce((s, l) => s + l.quantity, 0), [lines]);
 	const total = useMemo(
 		() =>
 			lines.reduce((s, l) => {
-				const t = treatById(l.id);
-				return s + (t ? t.price * l.quantity : 0);
+				const p = productById(l.id);
+				return s + (p ? p.price * l.quantity : 0);
 			}, 0),
 		[lines],
 	);

@@ -1,9 +1,9 @@
 {
-	"name": "maison-miellune-pwa",
+	"name": "bakehouse-pwa",
 	"private": true,
-	"description": "Generic, installable Progressive Web App for an artisan patisserie — a fast, offline-capable single-page template with a world-music ambience engine and hand-drawn SVG artwork.",
+	"description": "White-label, installable mobile PWA for a bakery/café: config-driven ordering, classes, catering, gift cards, rewards, story and a procedural music engine. Offline-capable on Cloudflare Workers.",
 	"cloudflare": {
-		"label": "Patisserie PWA",
+		"label": "Bakehouse PWA",
 		"products": [
 			"Workers"
 		],
