@@ -1,21 +1,17 @@
 {
-	"name": "workflows-starter-template",
+	"name": "maison-miellune-pwa",
 	"private": true,
-	"description": "Interactive starter template demonstrating Cloudflare Workflows with real-time status updates",
+	"description": "Generic, installable Progressive Web App for an artisan patisserie — a fast, offline-capable single-page template with a world-music ambience engine and hand-drawn SVG artwork.",
 	"cloudflare": {
-		"label": "Workflows Starter",
+		"label": "Patisserie PWA",
 		"products": [
-			"Workers",
-			"Workflows",
-			"Durable Objects"
+			"Workers"
 		],
 		"categories": [
 			"starter"
 		],
 		"publish": true,
-		"preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/4380d39a-b907-437c-e784-500fcc10cb00/preview",
-		"preview_icon_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/6d6e9a49-5c10-4ef6-bfa8-b6577a656300/public",
-		"docs_url": "https://developers.cloudflare.com/workflows/"
+		"docs_url": "https://developers.cloudflare.com/workers/"
 	},
 	"type": "module",
 	"scripts": {
@@ -26,6 +22,7 @@
 		"preview": "npm run build && vite preview",
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
+		"icons": "node scripts/generate-icons.mjs",
 		"test": "vitest run"
 	},
 	"dependencies": {
@@ -45,6 +42,7 @@
 		"eslint-plugin-react-refresh": "^0.4.20",
 		"globals": "^16.3.0",
 		"postcss": "^8.5.6",
+		"sharp": "^0.35.3",
 		"tailwindcss": "^3.4.18",
 		"typescript": "~5.8.3",
 		"typescript-eslint": "^8.39.1",

@@ -1,0 +1,55 @@
+{
+	"name": "Maison Miellune — Douceurs du monde",
+	"short_name": "Miellune",
+	"description": "Atelier imaginaire de douceurs artisanales inspirées des traditions du monde entier.",
+	"lang": "fr",
+	"dir": "ltr",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"display_override": ["standalone", "minimal-ui"],
+	"orientation": "portrait-primary",
+	"background_color": "#fbf6ec",
+	"theme_color": "#e9a94b",
+	"categories": ["food", "shopping", "lifestyle"],
+	"icons": [
+		{
+			"src": "/icons/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/icons/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/icons/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Voir la carte",
+			"short_name": "La carte",
+			"url": "/?section=carte",
+			"description": "Découvrir toutes les douceurs"
+		},
+		{
+			"name": "Passer commande",
+			"short_name": "Commander",
+			"url": "/?section=commander",
+			"description": "Composer son panier de gourmandises"
+		}
+	]
+}

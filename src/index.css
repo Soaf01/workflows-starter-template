@@ -4,9 +4,11 @@
 
 @layer base {
 	:root {
-		font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-		line-height: 1.5;
+		font-family: theme("fontFamily.sans");
+		line-height: 1.6;
 		font-weight: 400;
+		color: theme("colors.cocoa.800");
+		background-color: theme("colors.cream.100");
 
 		font-synthesis: none;
 		text-rendering: optimizeLegibility;
@@ -14,24 +16,132 @@
 		-moz-osx-font-smoothing: grayscale;
 	}
 
+	@media (prefers-color-scheme: dark) {
+		:root {
+			color: theme("colors.cream.200");
+			background-color: theme("colors.cocoa.900");
+		}
+	}
+
 	body {
 		margin: 0;
 		min-height: 100vh;
+		overflow-x: hidden;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: theme("fontFamily.serif");
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	:focus-visible {
+		outline: 2px solid theme("colors.honey.500");
+		outline-offset: 3px;
+		border-radius: 6px;
+	}
+
+	/* Respect reduced-motion for every decorative animation. */
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.001ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.001ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+@layer components {
+	.eyebrow {
+		@apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-honey-700 dark:text-honey-300;
+	}
+
+	.btn {
+		@apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
+	}
+
+	.btn-primary {
+		@apply btn bg-honey-500 text-cocoa-900 shadow-soft hover:bg-honey-400 hover:shadow-glow;
+	}
+
+	.btn-ghost {
+		@apply btn border border-cocoa-900/15 bg-white/60 text-cocoa-800 backdrop-blur hover:border-honey-500/60 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-cream-100 dark:hover:bg-white/10;
+	}
+
+	.card {
+		@apply rounded-3xl border border-cocoa-900/10 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04];
+	}
+
+	.section-pad {
+		@apply px-5 py-20 sm:px-8 md:py-28;
 	}
 }
 
 @layer utilities {
-	.font-mono {
-		font-family:
-			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-			"Courier New", monospace;
+	.text-balance {
+		text-wrap: balance;
 	}
 
-	.ring-glass {
-		@apply ring-1 ring-black/5 dark:ring-white/10;
+	.text-gradient-honey {
+		@apply bg-gradient-to-br from-honey-400 via-honey-600 to-berry-500 bg-clip-text text-transparent;
 	}
 
-	.shadow-float {
-		@apply shadow-lg shadow-black/5 dark:shadow-black/20;
+	.paper-texture {
+		background-image:
+			radial-gradient(
+				circle at 1px 1px,
+				rgba(74, 53, 39, 0.05) 1px,
+				transparent 0
+			);
+		background-size: 22px 22px;
+	}
+
+	.mask-fade-b {
+		-webkit-mask-image: linear-gradient(to bottom, black 72%, transparent);
+		mask-image: linear-gradient(to bottom, black 72%, transparent);
+	}
+
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+}
+
+/* Gallery marquee */
+@keyframes marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+.animate-marquee {
+	animation: marquee 42s linear infinite;
+}
+.animate-marquee-rev {
+	animation: marquee 52s linear infinite reverse;
+}
+.marquee-group:hover .animate-marquee,
+.marquee-group:hover .animate-marquee-rev {
+	animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+	.animate-marquee,
+	.animate-marquee-rev {
+		animation: none;
 	}
 }

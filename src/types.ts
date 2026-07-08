@@ -1,62 +1,66 @@
 /**
- * Shared TypeScript types for the Workflows starter template
+ * Shared types for the Maison Miellune template.
+ * Everything here is generic sample data — rename freely.
  */
 
-export type StepStatus =
-	| "pending"
-	| "running"
-	| "waiting"
-	| "completed"
-	| "error";
-export type WorkflowStatus = "idle" | "running" | "completed" | "error";
+export type CategoryId = "patisseries" | "monde" | "boulangerie" | "gateaux";
 
-export interface StepDefinition {
+export interface Category {
+	id: CategoryId;
+	label: string;
+	blurb: string;
+}
+
+export type TreatTag =
+	| "populaire"
+	| "nouveau"
+	| "vegan"
+	| "sans-gluten"
+	| "signature";
+
+/** Keys map 1:1 to a hand-drawn SVG in components/illustrations. */
+export type IllustrationKey =
+	| "croissant"
+	| "macaron"
+	| "eclair"
+	| "tarte"
+	| "financier"
+	| "baklava"
+	| "mochi"
+	| "alfajor"
+	| "churros"
+	| "gaufre"
+	| "levain"
+	| "brioche"
+	| "cheesecake"
+	| "foret"
+	| "cupcake"
+	| "cookie";
+
+export interface Treat {
 	id: string;
 	name: string;
+	category: CategoryId;
+	/** An evocative, invented place of origin (ties into the music regions). */
+	origin: string;
+	/** Price in the shop's generic currency unit. */
+	price: number;
+	illustration: IllustrationKey;
 	description: string;
-	lineRange: [number, number];
+	tags: TreatTag[];
+	featured?: boolean;
 }
 
-export interface WorkflowState {
-	instanceId: string | null;
-	currentStep: string | null;
-	stepStatuses: Record<string, StepStatus>;
-	workflowStatus: WorkflowStatus;
-	wsConnected: boolean;
+export interface CartLine {
+	id: string;
+	quantity: number;
 }
 
-export interface WorkflowUpdateMessage {
-	type: "workflow_update";
-	currentStep: string | null;
-	stepStatuses: Record<string, StepStatus>;
-	workflowStatus: "running" | "completed" | "error";
-	timestamp: number;
+export interface OrderResult {
+	ok: boolean;
+	reference?: string;
+	itemCount?: number;
+	total?: number;
+	message?: string;
+	error?: string;
 }
-
-// Step definitions for the workflow
-export const WORKFLOW_STEPS: StepDefinition[] = [
-	{
-		id: "process-data",
-		name: "process data",
-		description: "Break code into durable steps",
-		lineRange: [3, 7],
-	},
-	{
-		id: "wait-2-seconds",
-		name: "wait 2 seconds",
-		description: "Add time-based delays",
-		lineRange: [9, 10],
-	},
-	{
-		id: "wait-for-approval",
-		name: "wait for approval",
-		description: "Pause for external events",
-		lineRange: [12, 16],
-	},
-	{
-		id: "final",
-		name: "final",
-		description: "Use data from previous steps",
-		lineRange: [18, 22],
-	},
-];

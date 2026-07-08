@@ -1,16 +1,93 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 	<head>
 		<meta charset="UTF-8" />
-		<link
-			rel="icon"
-			href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 30'><path fill='%23000000' d='M52.688 13.028c-.22 0-.437.008-.654.015a.3.3 0 0 0-.102.024.37.37 0 0 0-.236.255l-.93 3.249c-.401 1.397-.252 2.687.422 3.634.618.876 1.646 1.39 2.894 1.45l5.045.306a.45.45 0 0 1 .435.41.5.5 0 0 1-.025.223.64.64 0 0 1-.547.426l-5.242.306c-2.848.132-5.912 2.456-6.987 5.29l-.378 1a.28.28 0 0 0 .248.382h18.054a.48.48 0 0 0 .464-.35c.32-1.153.482-2.344.48-3.54 0-7.22-5.79-13.072-12.933-13.072M44.807 29.578l.334-1.175c.402-1.397.253-2.687-.42-3.634-.62-.876-1.647-1.39-2.896-1.45l-23.665-.306a.47.47 0 0 1-.374-.199.5.5 0 0 1-.052-.434.64.64 0 0 1 .552-.426l23.886-.306c2.836-.131 5.9-2.456 6.975-5.29l1.362-3.6a.9.9 0 0 0 .04-.477C48.997 5.259 42.789 0 35.367 0c-6.842 0-12.647 4.462-14.73 10.665a6.92 6.92 0 0 0-4.911-1.374c-3.28.33-5.92 3.002-6.246 6.318a7.2 7.2 0 0 0 .18 2.472C4.3 18.241 0 22.679 0 28.133q0 .74.106 1.453a.46.46 0 0 0 .457.402h43.704a.57.57 0 0 0 .54-.418'/></svg>"
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<title>Maison Miellune — Douceurs artisanales du monde</title>
+		<meta
+			name="description"
+			content="Maison Miellune, atelier de douceurs artisanales inspirées des traditions du monde entier : pâtisseries, gâteaux, pains au levain et gourmandises voyageuses."
 		/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Workflows Starter Template</title>
+
+		<!-- PWA -->
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<meta name="theme-color" content="#e9a94b" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#241812" media="(prefers-color-scheme: dark)" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="Miellune" />
+
+		<!-- Icons -->
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+		<!-- Social -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Maison Miellune — Douceurs artisanales du monde" />
+		<meta
+			property="og:description"
+			content="Un atelier imaginaire de gourmandises inspirées des traditions du monde entier."
+		/>
+
+		<style>
+			/* Pre-hydration splash so first paint is never blank. */
+			#app-splash {
+				position: fixed;
+				inset: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 1.25rem;
+				background: #fbf6ec;
+				color: #7a5a34;
+				font-family: ui-sans-serif, system-ui, sans-serif;
+				z-index: 60;
+				transition: opacity 0.5s ease;
+			}
+			@media (prefers-color-scheme: dark) {
+				#app-splash {
+					background: #241812;
+					color: #e9c99b;
+				}
+			}
+			#app-splash .splash-mark {
+				width: 68px;
+				height: 68px;
+				animation: splash-bob 1.6s ease-in-out infinite;
+			}
+			#app-splash .splash-word {
+				font-family: ui-serif, Georgia, "Times New Roman", serif;
+				letter-spacing: 0.28em;
+				text-transform: uppercase;
+				font-size: 0.8rem;
+			}
+			@keyframes splash-bob {
+				0%, 100% { transform: translateY(0) rotate(-3deg); }
+				50% { transform: translateY(-8px) rotate(3deg); }
+			}
+		</style>
 	</head>
 	<body>
 		<div id="root"></div>
+		<div id="app-splash" aria-hidden="true">
+			<svg class="splash-mark" viewBox="0 0 64 64" aria-hidden="true">
+				<path
+					fill="currentColor"
+					fill-rule="evenodd"
+					d="M14.5 31.5 a17.5 17.5 0 1 0 35 0 a17.5 17.5 0 1 0 -35 0 Z
+					   M23.75 28.75 a15.75 15.75 0 1 1 31.5 0 a15.75 15.75 0 1 1 -31.5 0 Z"
+				/>
+				<path
+					fill="currentColor"
+					d="M35 18.75 C35 18.75 42.5 29 42.5 35 a7.25 7.25 0 1 1 -14.5 0 C28 29 35 18.75 35 18.75 Z"
+				/>
+			</svg>
+			<div class="splash-word">Maison Miellune</div>
+		</div>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>
 </html>
