@@ -1,0 +1,41 @@
+name: Deploy to Cloudflare Workers
+
+# Auto-deploys the PWA on every push, and on manual dispatch.
+# One-time setup: add these repository secrets
+#   (Settings → Secrets and variables → Actions):
+#     CLOUDFLARE_API_TOKEN   – token with "Edit Cloudflare Workers" permission
+#     CLOUDFLARE_ACCOUNT_ID  – your account id (optional if the token has one account)
+# The deployed URL is printed in the job log (https://maison-miellune-pwa.<subdomain>.workers.dev).
+
+on:
+  push:
+    branches:
+      - main
+      - claude/generic-pwa-template-wndxvy
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verify Cloudflare token is configured
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it under Settings → Secrets and variables → Actions, then re-run."
+            exit 1
+          fi
+
+      - name: Build & deploy
+        run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
