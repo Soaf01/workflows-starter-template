@@ -1,40 +1,25 @@
 /**
  * White-label configuration schema.
  *
- * The entire app renders from a single ClientConfig object. To launch a new
- * client's app you only add a config file under src/config/clients/ and select
- * it with the VITE_CLIENT env var — no component changes required.
- *
- * All sample content shipped with this template is generic and fictional.
+ * The whole app renders from a single ClientConfig. It supports:
+ *  - multiple selectable colour themes (config.themes)
+ *  - multiple languages with full content translation (config.translations)
+ * To launch a new client: add a config under src/config/clients and select it
+ * with VITE_CLIENT. All sample content is generic and fictional.
  */
 
+export type LangCode = "en" | "fr" | "es" | "de" | "ar";
+
 export type IconName =
-	| "home"
-	| "bag"
-	| "music"
-	| "book"
-	| "sparkles"
-	| "gift"
-	| "cake"
-	| "class"
-	| "star"
-	| "phone"
-	| "whatsapp"
-	| "pin"
-	| "clock"
-	| "instagram"
-	| "leaf"
-	| "heart"
-	| "truck"
-	| "store"
-	| "user";
+	| "home" | "bag" | "music" | "book" | "sparkles" | "gift" | "cake" | "class"
+	| "star" | "phone" | "whatsapp" | "pin" | "clock" | "instagram" | "leaf"
+	| "heart" | "truck" | "store" | "user" | "globe" | "palette";
 
 export interface Product {
 	id: string;
 	name: string;
 	category: string;
 	price: number;
-	/** Image reference resolved by <Photo/> (keywords or a URL/path). */
 	image: string;
 	description: string;
 	tags?: string[];
@@ -63,6 +48,36 @@ export interface CateringPackage {
 	items: string[];
 }
 
+export interface ThemeColors {
+	bg: string;
+	bgElevated: string;
+	surface: string;
+	surfaceAlt: string;
+	text: string;
+	textMuted: string;
+	gold: string;
+	goldSoft: string;
+	accent: string;
+	line: string;
+	radius: string;
+	/** "dark" | "light" — drives translucency choices in a few spots. */
+	mode: "dark" | "light";
+}
+
+export interface ThemeDef {
+	id: string;
+	label: string;
+	colors: ThemeColors;
+}
+
+export interface Fonts {
+	display: string;
+	body: string;
+	mono: string;
+	/** Google Fonts href (loaded at runtime, cached offline). Optional. */
+	href?: string;
+}
+
 export interface ClientConfig {
 	slug: string;
 	brand: {
@@ -72,24 +87,11 @@ export interface ClientConfig {
 		tagline: string;
 		established: string;
 	};
-	theme: {
-		bg: string;
-		bgElevated: string;
-		surface: string;
-		surfaceAlt: string;
-		text: string;
-		textMuted: string;
-		gold: string;
-		goldSoft: string;
-		accent: string;
-		line: string;
-		radius: string;
-		fontDisplay: string;
-		fontBody: string;
-		fontMono: string;
-		/** Google Fonts href (loaded at runtime; runtime-cached for offline). */
-		fontsHref: string;
-	};
+	fonts: Fonts;
+	themes: ThemeDef[];
+	defaultThemeId: string;
+	languages: { code: LangCode; label: string; rtl?: boolean }[];
+	defaultLanguage: LangCode;
 	currency: { symbol: string; code: string; position: "before" | "after" };
 	contact: {
 		phone: string;
@@ -124,23 +126,9 @@ export interface ClientConfig {
 		categories: { id: string; label: string }[];
 		products: Product[];
 	};
-	music: {
-		kicker: string;
-		title: string;
-		intro: string;
-	};
-	classes: {
-		kicker: string;
-		title: string;
-		intro: string;
-		items: ClassItem[];
-	};
-	catering: {
-		kicker: string;
-		title: string;
-		intro: string;
-		packages: CateringPackage[];
-	};
+	music: { kicker: string; title: string; intro: string };
+	classes: { kicker: string; title: string; intro: string; items: ClassItem[] };
+	catering: { kicker: string; title: string; intro: string; packages: CateringPackage[] };
 	giftCards: {
 		kicker: string;
 		title: string;
@@ -164,16 +152,18 @@ export interface ClientConfig {
 		paragraphs: string[];
 		values: { icon: IconName; title: string; text: string }[];
 	};
+	/** Per-language content overrides, deep-merged over the base (English). */
+	translations?: Partial<Record<LangCode, DeepPartial<ClientConfig>>>;
 }
 
 export type ScreenId =
-	| "home"
-	| "menu"
-	| "music"
-	| "story"
-	| "more"
-	| "classes"
-	| "catering"
-	| "gift"
-	| "rewards"
-	| "contact";
+	| "home" | "menu" | "music" | "story" | "more"
+	| "classes" | "catering" | "gift" | "rewards" | "contact";
+
+export type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends (infer U)[]
+		? DeepPartial<U>[]
+		: T[P] extends object
+			? DeepPartial<T[P]>
+			: T[P];
+};

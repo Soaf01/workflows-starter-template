@@ -28,9 +28,10 @@ function isDirect(src: string): boolean {
 
 function primarySrc(src: string, w = 800, h = 800): string {
 	if (isDirect(src)) return src;
-	const kw = encodeURIComponent(src.replace(/\s+/g, ""));
+	// Comma-separated tags, AND-matched (/all) for far more on-topic photos.
+	const tags = encodeURIComponent(src.replace(/\s+/g, ""));
 	const lock = (hash(src) % 900) + 1;
-	return `https://loremflickr.com/${w}/${h}/${kw}?lock=${lock}`;
+	return `https://loremflickr.com/${w}/${h}/${tags}/all?lock=${lock}`;
 }
 
 function fallbackSrc(src: string, w = 800, h = 800): string {
