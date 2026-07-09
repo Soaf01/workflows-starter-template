@@ -23,6 +23,7 @@
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
 		"icons": "node scripts/generate-icons.mjs",
+		"photos": "node scripts/fetch-photos.mjs",
 		"test": "vitest run"
 	},
 	"dependencies": {

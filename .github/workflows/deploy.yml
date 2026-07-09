@@ -34,6 +34,11 @@ jobs:
             exit 1
           fi
 
+      # Fetch product photos into public/img so they're bundled into the deploy.
+      # Self-contained: no dependency on the photos.yml commit workflow.
+      - name: Fetch product photos
+        run: node scripts/fetch-photos.mjs || true
+
       - name: Build & deploy
         run: npm run deploy
         env:
