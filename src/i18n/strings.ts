@@ -9,6 +9,12 @@ import type { LangCode } from "../config/types";
 type Dict = Record<string, string>;
 
 const en: Dict = {
+	"nav.account": "Account",
+	"menu.search": "Search the menu…", "menu.noResults": "Nothing matches your search.",
+	"music.liveAmbience": "Live ambience", "music.playlist": "Playlist", "music.today": "Today", "music.freeToday": "Today's picks are free", "music.unlockFull": "Sign in for the full playlist", "music.todaysPicks": "Today's picks",
+	"cart.promo": "Promo code (try AURELIA10)", "cart.promoApplied": "Promo applied — {pct}% off", "cart.discount": "Discount",
+	"order.status": "Received",
+	"account.kicker": "Account", "account.title": "Your account", "account.hello": "Hi, {name}", "account.pitch": "Sign in to unlock the full playlist, save favourites and track your orders.", "account.signIn": "Sign in", "account.signOut": "Sign out", "account.demoNote": "Demo sign-in — no password, nothing leaves your device.", "account.favourites": "Favourites", "account.noFavourites": "Tap the heart on any item to save it here.", "account.orders": "Order history", "account.noOrders": "Your past orders will appear here.", "account.member": "You're a member",
 	"nav.home": "Home", "nav.menu": "Menu", "nav.music": "Music", "nav.rewards": "Rewards",
 	"nav.more": "More", "nav.story": "Story", "nav.classes": "Classes", "nav.catering": "Catering",
 	"nav.gift": "Gift cards", "nav.contact": "Visit",
@@ -50,6 +56,12 @@ const en: Dict = {
 };
 
 const fr: Dict = {
+	"nav.account": "Compte",
+	"menu.search": "Rechercher…", "menu.noResults": "Aucun résultat.",
+	"music.liveAmbience": "Ambiance live", "music.playlist": "Playlist", "music.today": "Jour", "music.freeToday": "Sélection du jour offerte", "music.unlockFull": "Connectez-vous pour toute la playlist", "music.todaysPicks": "Sélection du jour",
+	"cart.promo": "Code promo (essayez AURELIA10)", "cart.promoApplied": "Code appliqué — −{pct} %", "cart.discount": "Remise",
+	"order.status": "Reçue",
+	"account.kicker": "Compte", "account.title": "Votre compte", "account.hello": "Bonjour, {name}", "account.pitch": "Connectez-vous pour toute la playlist, vos favoris et le suivi de commandes.", "account.signIn": "Se connecter", "account.signOut": "Se déconnecter", "account.demoNote": "Connexion de démo — sans mot de passe, rien ne quitte votre appareil.", "account.favourites": "Favoris", "account.noFavourites": "Touchez le cœur d'un article pour l'enregistrer.", "account.orders": "Historique", "account.noOrders": "Vos commandes passées apparaîtront ici.", "account.member": "Vous êtes membre",
 	"nav.home": "Accueil", "nav.menu": "Menu", "nav.music": "Musique", "nav.rewards": "Fidélité",
 	"nav.more": "Plus", "nav.story": "Histoire", "nav.classes": "Cours", "nav.catering": "Traiteur",
 	"nav.gift": "Cartes cadeaux", "nav.contact": "Visite",
@@ -91,6 +103,12 @@ const fr: Dict = {
 };
 
 const es: Dict = {
+	"nav.account": "Cuenta",
+	"menu.search": "Buscar…", "menu.noResults": "Sin resultados.",
+	"music.liveAmbience": "Ambiente en vivo", "music.playlist": "Lista", "music.today": "Hoy", "music.freeToday": "Selección de hoy gratis", "music.unlockFull": "Inicia sesión para la lista completa", "music.todaysPicks": "Selección de hoy",
+	"cart.promo": "Código promo (prueba AURELIA10)", "cart.promoApplied": "Código aplicado — −{pct} %", "cart.discount": "Descuento",
+	"order.status": "Recibido",
+	"account.kicker": "Cuenta", "account.title": "Tu cuenta", "account.hello": "Hola, {name}", "account.pitch": "Inicia sesión para la lista completa, guardar favoritos y ver tus pedidos.", "account.signIn": "Iniciar sesión", "account.signOut": "Cerrar sesión", "account.demoNote": "Inicio de demo — sin contraseña, nada sale de tu dispositivo.", "account.favourites": "Favoritos", "account.noFavourites": "Toca el corazón de un artículo para guardarlo.", "account.orders": "Historial", "account.noOrders": "Tus pedidos aparecerán aquí.", "account.member": "Eres socio",
 	"nav.home": "Inicio", "nav.menu": "Menú", "nav.music": "Música", "nav.rewards": "Puntos",
 	"nav.more": "Más", "nav.story": "Historia", "nav.classes": "Clases", "nav.catering": "Catering",
 	"nav.gift": "Tarjetas", "nav.contact": "Visítanos",
@@ -132,6 +150,12 @@ const es: Dict = {
 };
 
 const de: Dict = {
+	"nav.account": "Konto",
+	"menu.search": "Suchen…", "menu.noResults": "Keine Treffer.",
+	"music.liveAmbience": "Live-Ambiente", "music.playlist": "Playlist", "music.today": "Heute", "music.freeToday": "Heutige Auswahl gratis", "music.unlockFull": "Anmelden für die ganze Playlist", "music.todaysPicks": "Heutige Auswahl",
+	"cart.promo": "Gutscheincode (z. B. AURELIA10)", "cart.promoApplied": "Code angewandt — −{pct} %", "cart.discount": "Rabatt",
+	"order.status": "Erhalten",
+	"account.kicker": "Konto", "account.title": "Dein Konto", "account.hello": "Hallo, {name}", "account.pitch": "Melde dich an für die ganze Playlist, Favoriten und Bestellverlauf.", "account.signIn": "Anmelden", "account.signOut": "Abmelden", "account.demoNote": "Demo-Anmeldung — kein Passwort, nichts verlässt dein Gerät.", "account.favourites": "Favoriten", "account.noFavourites": "Tippe das Herz an, um etwas zu speichern.", "account.orders": "Bestellverlauf", "account.noOrders": "Deine Bestellungen erscheinen hier.", "account.member": "Du bist Mitglied",
 	"nav.home": "Start", "nav.menu": "Menü", "nav.music": "Musik", "nav.rewards": "Treue",
 	"nav.more": "Mehr", "nav.story": "Geschichte", "nav.classes": "Kurse", "nav.catering": "Catering",
 	"nav.gift": "Geschenke", "nav.contact": "Besuch",
@@ -173,6 +197,12 @@ const de: Dict = {
 };
 
 const ar: Dict = {
+	"nav.account": "الحساب",
+	"menu.search": "ابحث…", "menu.noResults": "لا نتائج.",
+	"music.liveAmbience": "أجواء مباشرة", "music.playlist": "قائمة التشغيل", "music.today": "اليوم", "music.freeToday": "اختيارات اليوم مجانية", "music.unlockFull": "سجّل الدخول للقائمة الكاملة", "music.todaysPicks": "اختيارات اليوم",
+	"cart.promo": "رمز الخصم (جرّب AURELIA10)", "cart.promoApplied": "طُبّق الرمز — خصم {pct}%", "cart.discount": "الخصم",
+	"order.status": "تم الاستلام",
+	"account.kicker": "الحساب", "account.title": "حسابك", "account.hello": "مرحبًا، {name}", "account.pitch": "سجّل الدخول لفتح كامل القائمة وحفظ المفضلة وتتبّع طلباتك.", "account.signIn": "تسجيل الدخول", "account.signOut": "تسجيل الخروج", "account.demoNote": "تسجيل دخول تجريبي — بلا كلمة مرور، ولا شيء يغادر جهازك.", "account.favourites": "المفضلة", "account.noFavourites": "المس القلب على أي عنصر لحفظه هنا.", "account.orders": "سجل الطلبات", "account.noOrders": "ستظهر طلباتك السابقة هنا.", "account.member": "أنت عضو",
 	"nav.home": "الرئيسية", "nav.menu": "القائمة", "nav.music": "الموسيقى", "nav.rewards": "المكافآت",
 	"nav.more": "المزيد", "nav.story": "قصتنا", "nav.classes": "الدورات", "nav.catering": "الضيافة",
 	"nav.gift": "بطاقات الهدايا", "nav.contact": "زيارتنا",

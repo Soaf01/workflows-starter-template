@@ -13,6 +13,7 @@ export function MoreScreen() {
 	const { features, brand } = cfg;
 
 	const links: { id: ScreenId; icon: IconName; on: boolean }[] = [
+		{ id: "account", icon: "user", on: true },
 		{ id: "classes", icon: "class", on: features.classes },
 		{ id: "catering", icon: "cake", on: features.catering },
 		{ id: "gift", icon: "gift", on: features.giftCards },

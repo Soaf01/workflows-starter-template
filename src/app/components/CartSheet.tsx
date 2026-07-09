@@ -10,7 +10,7 @@ import type { OrderResult } from "../../types";
 const WA_GREEN = "#25d366";
 
 export function CartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-	const { cart } = useApp();
+	const { cart, orders } = useApp();
 	const { t, cfg } = useI18n();
 	const [step, setStep] = useState<"cart" | "checkout" | "done">("cart");
 	const [result, setResult] = useState<OrderResult | null>(null);
@@ -22,6 +22,7 @@ export function CartSheet({ open, onClose }: { open: boolean; onClose: () => voi
 	const [address, setAddress] = useState("");
 	const [time, setTime] = useState("asap");
 	const [notes, setNotes] = useState("");
+	const [promo, setPromo] = useState("");
 
 	function localReference() {
 		const a = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -40,6 +41,10 @@ export function CartSheet({ open, onClose }: { open: boolean; onClose: () => voi
 	const lines = cart.lines
 		.map((l) => ({ l, p: cfg.menu.products.find((pr) => pr.id === l.id) }))
 		.filter((x): x is { l: typeof x.l; p: NonNullable<typeof x.p> } => Boolean(x.p));
+
+	const promoOk = promo.trim().toUpperCase() === "AURELIA10";
+	const discount = promoOk ? 0.1 : 0;
+	const finalTotal = Math.round(cart.total * (1 - discount) * 100) / 100;
 
 	const timeLabels: Record<string, string> = {
 		asap: t("cart.timeAsap"), h1: t("cart.time1h"), afternoon: t("cart.timeAfternoon"), tomorrow: t("cart.timeTomorrow"),
@@ -66,7 +71,7 @@ export function CartSheet({ open, onClose }: { open: boolean; onClose: () => voi
 		setSending(true);
 		const payload = {
 			items: lines.map(({ l, p }) => ({ id: p.id, name: p.name, quantity: l.quantity, price: p.price })),
-			total: cart.total, mode, name, phone,
+			total: finalTotal, mode, name, phone, promo: promoOk ? promo.trim().toUpperCase() : undefined,
 		};
 		let data: OrderResult;
 		try {
@@ -74,8 +79,15 @@ export function CartSheet({ open, onClose }: { open: boolean; onClose: () => voi
 			if (!res.ok) throw new Error("bad");
 			data = (await res.json()) as OrderResult;
 		} catch {
-			data = { ok: true, reference: localReference(), itemCount: cart.count, total: cart.total, message: t("cart.demoOffline") };
+			data = { ok: true, reference: localReference(), itemCount: cart.count, total: finalTotal, message: t("cart.demoOffline") };
 		}
+		orders.add({
+			ref: data.reference ?? localReference(),
+			items: lines.map(({ l, p }) => ({ name: p.name, quantity: l.quantity })),
+			total: finalTotal,
+			at: Date.now(),
+			status: t("order.status"),
+		});
 		setResult(data);
 		setStep("done");
 		setSending(false);
@@ -170,14 +182,24 @@ export function CartSheet({ open, onClose }: { open: boolean; onClose: () => voi
 					<option value="tomorrow">{t("cart.timeTomorrow")}</option>
 				</select>
 				<textarea className="field resize-none" rows={2} placeholder={t("cart.notes")} value={notes} onChange={(e) => setNotes(e.target.value)} />
+				<div>
+					<input className={`field ${promoOk ? "!border-gold" : ""}`} placeholder={t("cart.promo")} value={promo} onChange={(e) => setPromo(e.target.value)} />
+					{promoOk && <p className="mt-1 text-xs font-semibold text-gold">{t("cart.promoApplied", { pct: 10 })}</p>}
+				</div>
 				<p className="text-[11px] text-muted">{t("cart.demoPay")}</p>
 			</div>
 		);
 		footer = (
 			<div className="space-y-2">
+				{discount > 0 && (
+					<div className="flex items-center justify-between text-xs text-gold">
+						<span>{t("cart.discount")}</span>
+						<span>−{money(cart.total - finalTotal)}</span>
+					</div>
+				)}
 				<div className="flex items-center justify-between">
 					<span className="text-sm text-muted">{t("cart.total")}</span>
-					<span className="font-display text-xl font-bold text-ink">{money(cart.total)}</span>
+					<span className="font-display text-xl font-bold text-ink">{money(finalTotal)}</span>
 				</div>
 				<button onClick={placeOrder} disabled={sending} className="btn-primary w-full">{sending ? t("cart.placing") : t("cart.placeOrder")}</button>
 				<button onClick={() => setStep("cart")} className="w-full text-center text-xs font-medium text-muted hover:text-ink">← {t("cart.backToBag")}</button>

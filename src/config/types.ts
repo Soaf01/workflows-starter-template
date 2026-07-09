@@ -13,7 +13,16 @@ export type LangCode = "en" | "fr" | "es" | "de" | "ar";
 export type IconName =
 	| "home" | "bag" | "music" | "book" | "sparkles" | "gift" | "cake" | "class"
 	| "star" | "phone" | "whatsapp" | "pin" | "clock" | "instagram" | "leaf"
-	| "heart" | "truck" | "store" | "user" | "globe" | "palette";
+	| "heart" | "truck" | "store" | "user" | "globe" | "palette"
+	| "lock" | "search" | "ticket" | "receipt" | "play" | "logout";
+
+export interface Track {
+	id: string;
+	title: string;
+	artist: string;
+	/** minutes:seconds, display only */
+	length: string;
+}
 
 export interface Product {
 	id: string;
@@ -126,7 +135,7 @@ export interface ClientConfig {
 		categories: { id: string; label: string }[];
 		products: Product[];
 	};
-	music: { kicker: string; title: string; intro: string };
+	music: { kicker: string; title: string; intro: string; tracks: Track[] };
 	classes: { kicker: string; title: string; intro: string; items: ClassItem[] };
 	catering: { kicker: string; title: string; intro: string; packages: CateringPackage[] };
 	giftCards: {
@@ -158,7 +167,7 @@ export interface ClientConfig {
 
 export type ScreenId =
 	| "home" | "menu" | "music" | "story" | "more"
-	| "classes" | "catering" | "gift" | "rewards" | "contact";
+	| "classes" | "catering" | "gift" | "rewards" | "contact" | "account";
 
 export type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends (infer U)[]

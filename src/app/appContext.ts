@@ -1,6 +1,9 @@
 import { createContext, useContext } from "react";
 import type { ScreenId } from "../config/types";
 import type { CartApi } from "../hooks/useCart";
+import type { AccountApi } from "../hooks/useAccount";
+import type { FavApi } from "../hooks/useFavourites";
+import type { OrdersApi } from "../hooks/useOrders";
 
 export interface AppCtx {
 	screen: ScreenId;
@@ -8,7 +11,11 @@ export interface AppCtx {
 	back: () => void;
 	canBack: boolean;
 	openCart: () => void;
+	openProduct: (id: string) => void;
 	cart: CartApi;
+	account: AccountApi;
+	fav: FavApi;
+	orders: OrdersApi;
 	toast: (message: string) => void;
 }
 

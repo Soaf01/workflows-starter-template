@@ -1,0 +1,37 @@
+name: Fetch photos
+
+# Downloads the photos in scripts/photo-sources.json (on GitHub's network-
+# enabled runner) and commits them to public/img/. Runs when the source list
+# changes, or on manual dispatch. The image commit then triggers a deploy.
+
+on:
+  push:
+    branches: [main, claude/generic-pwa-template-wndxvy]
+    paths:
+      - "scripts/photo-sources.json"
+      - "scripts/fetch-photos.mjs"
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fetch photos
+        run: node scripts/fetch-photos.mjs
+      - name: Commit images
+        run: |
+          git config user.name "aurelia-photos-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/img
+          if git diff --cached --quiet; then
+            echo "No image changes."
+          else
+            git commit -m "chore: fetch product photos"
+            git push
+          fi

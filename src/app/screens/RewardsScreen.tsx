@@ -1,10 +1,12 @@
 import { Icon } from "../../ui/Icon";
 import { useI18n } from "../../i18n/lang";
+import { useApp } from "../appContext";
 
 const DEMO_POINTS = 85;
 
 export function RewardsScreen() {
 	const { t, cfg } = useI18n();
+	const { account, navigate } = useApp();
 	const { rewards } = cfg;
 	const next = rewards.tiers.find((tier) => tier.threshold > DEMO_POINTS) ?? rewards.tiers[rewards.tiers.length - 1];
 	const pct = Math.min(100, Math.round((DEMO_POINTS / next.threshold) * 100));
@@ -57,7 +59,13 @@ export function RewardsScreen() {
 				))}
 			</div>
 
-			<button className="btn-primary mt-6 w-full">{t("rewards.join", { title: rewards.title })}</button>
+			{account.member ? (
+				<p className="mt-6 flex items-center justify-center gap-2 rounded-full border border-gold/30 bg-gold/5 py-3 text-sm font-semibold text-gold">
+					<Icon name="star" className="h-4 w-4" />{t("account.member")}
+				</p>
+			) : (
+				<button onClick={() => navigate("account")} className="btn-primary mt-6 w-full">{t("rewards.join", { title: rewards.title })}</button>
+			)}
 			<p className="mt-2 text-center text-[11px] text-muted">{t("rewards.demo")}</p>
 		</div>
 	);

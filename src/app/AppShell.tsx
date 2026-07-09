@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { config } from "../config";
 import { useCart } from "../hooks/useCart";
+import { useAccount } from "../hooks/useAccount";
+import { useFavourites } from "../hooks/useFavourites";
+import { useOrders } from "../hooks/useOrders";
 import { useI18n } from "../i18n/lang";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
 import { AppContext } from "./appContext";
 import { CartSheet } from "./components/CartSheet";
+import { ProductDetailSheet } from "./components/ProductDetailSheet";
 import type { LangCode, ScreenId } from "../config/types";
 
 import { HomeScreen } from "./screens/HomeScreen";
@@ -18,9 +22,10 @@ import { CateringScreen } from "./screens/CateringScreen";
 import { GiftScreen } from "./screens/GiftScreen";
 import { RewardsScreen } from "./screens/RewardsScreen";
 import { ContactScreen } from "./screens/ContactScreen";
+import { AccountScreen } from "./screens/AccountScreen";
 
-const SUB_OF_MORE: ScreenId[] = ["classes", "catering", "gift", "story", "contact"];
-const ALL_SCREENS: ScreenId[] = ["home", "menu", "music", "story", "more", "classes", "catering", "gift", "rewards", "contact"];
+const SUB_OF_MORE: ScreenId[] = ["classes", "catering", "gift", "story", "contact", "account"];
+const ALL_SCREENS: ScreenId[] = ["home", "menu", "music", "story", "more", "classes", "catering", "gift", "rewards", "contact", "account"];
 
 function renderScreen(screen: ScreenId) {
 	switch (screen) {
@@ -34,16 +39,21 @@ function renderScreen(screen: ScreenId) {
 		case "gift": return <GiftScreen />;
 		case "rewards": return <RewardsScreen />;
 		case "contact": return <ContactScreen />;
+		case "account": return <AccountScreen />;
 	}
 }
 
 export function AppShell() {
 	const cart = useCart();
+	const account = useAccount();
+	const fav = useFavourites();
+	const orders = useOrders();
 	const { t, cfg, lang, dir, setLang, languages } = useI18n();
 	const [screen, setScreen] = useState<ScreenId>("home");
 	const [history, setHistory] = useState<ScreenId[]>([]);
 	const [cartOpen, setCartOpen] = useState(false);
 	const [langOpen, setLangOpen] = useState(false);
+	const [productId, setProductId] = useState<string | null>(null);
 	const [toastMsg, setToastMsg] = useState<{ text: string; k: number } | null>(null);
 	const mainRef = useRef<HTMLElement>(null);
 
@@ -51,29 +61,14 @@ export function AppShell() {
 		const s = new URLSearchParams(window.location.search).get("screen") as ScreenId | null;
 		if (s && ALL_SCREENS.includes(s)) setScreen(s);
 	}, []);
-
-	useEffect(() => {
-		mainRef.current?.scrollTo({ top: 0 });
-	}, [screen]);
+	useEffect(() => { mainRef.current?.scrollTo({ top: 0 }); }, [screen]);
 
 	const navigate = useCallback((id: ScreenId) => {
-		setScreen((cur) => {
-			setHistory((h) => (cur === id ? h : [...h, cur]));
-			return id;
-		});
+		setScreen((cur) => { setHistory((h) => (cur === id ? h : [...h, cur])); return id; });
 	}, []);
-
 	const back = useCallback(() => {
-		setHistory((h) => {
-			if (h.length === 0) {
-				setScreen("home");
-				return h;
-			}
-			setScreen(h[h.length - 1]);
-			return h.slice(0, -1);
-		});
+		setHistory((h) => { if (h.length === 0) { setScreen("home"); return h; } setScreen(h[h.length - 1]); return h.slice(0, -1); });
 	}, []);
-
 	const toast = useCallback((text: string) => setToastMsg({ text, k: Date.now() }), []);
 	useEffect(() => {
 		if (!toastMsg) return;
@@ -86,7 +81,7 @@ export function AppShell() {
 	const title = useMemo(() => (screen === "home" ? cfg.brand.shortName : t(`nav.${screen}`)), [screen, cfg, t]);
 
 	return (
-		<AppContext.Provider value={{ screen, navigate, back, canBack, openCart: () => setCartOpen(true), cart, toast }}>
+		<AppContext.Provider value={{ screen, navigate, back, canBack, openCart: () => setCartOpen(true), openProduct: setProductId, cart, account, fav, orders, toast }}>
 			<div className="fixed inset-0 flex items-stretch justify-center bg-[#050403] sm:items-center">
 				<div className="relative flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-bg sm:h-[calc(100dvh-2rem)] sm:max-h-[900px] sm:rounded-[38px] sm:border sm:border-line sm:shadow-card">
 					{/* Header */}
@@ -97,42 +92,36 @@ export function AppShell() {
 									<svg viewBox="0 0 24 24" className="h-5 w-5" style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 								</button>
 							) : (
-								<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold text-[#241a10]" style={{ background: "linear-gradient(180deg,var(--gold-soft),var(--gold))" }}>
-									{cfg.brand.monogram}
-								</span>
+								<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold text-[#241a10]" style={{ background: "linear-gradient(180deg,var(--gold-soft),var(--gold))" }}>{cfg.brand.monogram}</span>
 							)}
 							<span className="truncate font-display text-lg font-semibold text-ink">{title}</span>
 						</div>
 
 						<div className="flex shrink-0 items-center gap-1.5">
-							<button onClick={() => setLangOpen(true)} className="flex h-9 items-center gap-1 rounded-full border border-line px-2.5 text-xs font-bold text-ink" aria-label={t("more.language")}>
-								<Icon name="globe" className="h-4 w-4 text-gold" />
-								{lang.toUpperCase()}
+							<button onClick={() => navigate("account")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink" aria-label={t("nav.account")}>
+								<Icon name="user" className="h-5 w-5" />
+								{account.member && <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-gold ring-2 ring-bg" />}
+							</button>
+							<button onClick={() => setLangOpen(true)} className="flex h-9 items-center gap-1 rounded-full border border-line px-2 text-xs font-bold text-ink" aria-label={t("more.language")}>
+								<Icon name="globe" className="h-4 w-4 text-gold" />{lang.toUpperCase()}
 							</button>
 							{cfg.features.order && (
 								<button onClick={() => setCartOpen(true)} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink" aria-label={t("cart.bag")}>
 									<Icon name="bag" className="h-5 w-5" />
-									{cart.count > 0 && (
-										<span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">{cart.count}</span>
-									)}
+									{cart.count > 0 && <span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">{cart.count}</span>}
 								</button>
 							)}
 						</div>
 					</header>
 
-					{/* Screen */}
-					<main ref={mainRef} key={screen} className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
-						{renderScreen(screen)}
-					</main>
+					<main ref={mainRef} key={screen} className="no-scrollbar min-h-0 flex-1 overflow-y-auto">{renderScreen(screen)}</main>
 
-					{/* Toast */}
 					{toastMsg && (
 						<div key={toastMsg.k} className="pointer-events-none absolute inset-x-0 bottom-24 z-40 flex justify-center px-6">
 							<div className="animate-slide-up rounded-full bg-ink px-4 py-2 text-xs font-semibold text-bg shadow-card">{toastMsg.text}</div>
 						</div>
 					)}
 
-					{/* Bottom nav */}
 					<nav className="relative z-30 flex shrink-0 items-stretch justify-around border-t border-line bg-bg/95 px-1 pb-[max(env(safe-area-inset-bottom),0.4rem)] pt-1.5 backdrop-blur-md">
 						{config.nav.map((item) => {
 							const on = activeNav === item.id;
@@ -146,15 +135,12 @@ export function AppShell() {
 					</nav>
 
 					<CartSheet open={cartOpen} onClose={() => setCartOpen(false)} />
+					<ProductDetailSheet productId={productId} onClose={() => setProductId(null)} />
 
 					<Sheet open={langOpen} onClose={() => setLangOpen(false)} title={t("more.language")}>
 						<div className="grid grid-cols-1 gap-2 py-1">
 							{languages.map((l) => (
-								<button
-									key={l.code}
-									onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
-									className={`flex items-center justify-between rounded-2xl border px-4 py-3.5 text-sm font-semibold transition-colors ${lang === l.code ? "border-gold bg-gold/10 text-gold" : "border-line text-ink"}`}
-								>
+								<button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }} className={`flex items-center justify-between rounded-2xl border px-4 py-3.5 text-sm font-semibold transition-colors ${lang === l.code ? "border-gold bg-gold/10 text-gold" : "border-line text-ink"}`}>
 									<span>{l.label}</span>
 									<span className="font-mono text-xs text-muted">{l.code.toUpperCase()}</span>
 								</button>

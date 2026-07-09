@@ -3,12 +3,14 @@ import { Photo } from "../../lib/photo";
 import { Icon } from "../../ui/Icon";
 import { useI18n } from "../../i18n/lang";
 import { useApp } from "../appContext";
+import { dailyTrackIndices } from "../../lib/dailyPicks";
 import type { IconName, ScreenId } from "../../config/types";
 
 export function HomeScreen() {
-	const { navigate, cart, toast } = useApp();
+	const { navigate, cart, toast, account } = useApp();
 	const { t, cfg } = useI18n();
 	const { home, brand, features } = cfg;
+	const dailyTracks = dailyTrackIndices(3).map((i) => cfg.music.tracks[i]).filter(Boolean);
 	const featured = home.featuredIds
 		.map((id) => cfg.menu.products.find((p) => p.id === id))
 		.filter((p): p is NonNullable<typeof p> => Boolean(p));
@@ -96,6 +98,30 @@ export function HomeScreen() {
 						))}
 					</div>
 				</section>
+
+				{features.music && dailyTracks.length > 0 && (
+					<button onClick={() => navigate("music")} className="w-full overflow-hidden rounded-app border border-line bg-gradient-to-br from-surface to-bg-elevated p-4 text-left transition-colors hover:border-gold">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/12 text-gold"><Icon name="music" className="h-5 w-5" /></span>
+								<div>
+									<p className="kicker">{cfg.music.kicker}</p>
+									<p className="font-display text-base font-bold text-ink">{t("music.todaysPicks")}</p>
+								</div>
+							</div>
+							{!account.member && <Icon name="lock" className="h-4 w-4 text-muted" />}
+						</div>
+						<div className="mt-3 space-y-1.5">
+							{dailyTracks.map((tr) => (
+								<div key={tr.id} className="flex items-center gap-2 text-sm">
+									<Icon name="play" className="h-3.5 w-3.5 shrink-0 text-gold" />
+									<span className="truncate text-ink">{tr.title}</span>
+									<span className="truncate text-xs text-muted">· {tr.artist}</span>
+								</div>
+							))}
+						</div>
+					</button>
+				)}
 
 				<button onClick={() => navigate("contact")} className="relative block w-full overflow-hidden rounded-app border border-line text-left">
 					<Photo src="bakery,cafe" alt="Visit" width={800} height={400} className="h-36 w-full" />
