@@ -69,6 +69,18 @@ Et le contre-modèle, tout aussi documenté : **la correction automatique imméd
 
 **Thèse produit : Plume n'est pas un correcteur, c'est un entraîneur de perception.** Tout est conçu pour forcer son attention sur la forme au moment de propriété maximale (son propre texte qu'il vient d'écrire), révéler le minimum d'information nécessaire, et enregistrer *combien d'aide il a fallu* comme signal de maîtrise.
 
+### L'examen d'entrée et le curriculum adaptatif
+
+Avant toute chose, l'application mesure son vrai niveau *à l'écrit* (le placement B1.5 de son école mesure surtout la compétence globale, tirée par l'oral) et construit le curriculum à partir de là. ~45-60 minutes, sécable en deux séances, cinq épreuves complémentaires — chacune mesure une chose différente :
+
+1. **Production libre courte** (message type TCF tâche 1, 60-120 mots, ~10 min) : ses fautes en écriture spontanée à niveau facile — la base du modèle d'erreurs.
+2. **Production argumentée courte** (opinion, 100-120 mots, ~15 min) : son plafond — argumentation, registre, complexité des phrases.
+3. **Dictée calibrée** (5-6 phrases concentrant les pièges du français : -er/-é, accords du groupe nominal, a/à, ses/ces, participe passé) : sépare « ne connaît pas la forme » de « connaît mais n'applique pas », et objective l'écriture « à l'oreille ».
+4. **Chasse à l'erreur calibrée** (2 paragraphes contenant un nombre connu de fautes plantées, typiques de son profil) : mesure directe de son **taux de détection de départ** — la métrique reine — indépendamment de ses propres textes.
+5. **Micro-test de métalangage** (5 questions : identifier le sujet, le COD, le participe…) : décide si l'onboarding métalangage est nécessaire, et à quelle profondeur.
+
+**Sortie de l'examen d'entrée** : niveau CECR écrit estimé (comparé au placement B1.5), premier remplissage du modèle personnel d'erreurs (probabilité de maîtrise par catégorie), taux d'auto-détection de départ, et un **curriculum généré** : ordre des cycles ciblés (familles de fautes classées par fréquence × rentabilité à l'examen), rythme des sessions, jalons d'examens blancs toutes les 2-3 semaines, le tout planifié à rebours depuis la date d'examen visée. Le curriculum n'est pas figé : chaque session met à jour le modèle, et le plan se réordonne en continu.
+
 ### La session quotidienne (~20-30 min)
 
 1. **Échauffement (3 min)** — 3-5 phrases « chasse à l'erreur » générées à partir de *ses* fautes passées, dans les catégories que le modèle d'oubli dit « à réviser ». Une phrase sur cinq est sans faute (entraîne la précision du jugement).
@@ -148,7 +160,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 ## 8. Feuille de route proposée
 
 **MVP (objectif : utilisable par lui en ~1-2 semaines de dev)**
-0. **Diagnostic initial de l'écrit** : deux courtes productions écrites calibrées → estimation du niveau CECR *à l'écrit* (à comparer au placement global B1.5 de son école) et premier remplissage du profil d'erreurs. Toutes les hypothèses de niveau du présent brief sont à recaler sur ce diagnostic.
+0. **Examen d'entrée** (§5, version complète dès le MVP : deux productions + dictée calibrée + chasse à l'erreur + micro-test de métalangage) → niveau CECR écrit, premier modèle d'erreurs, taux de détection de départ, et génération du premier curriculum. Toutes les hypothèses de niveau du présent brief sont à recaler sur ce résultat.
 1. Éditeur silencieux + banque de sujets (5 formats d'épreuve + sujets « vie quotidienne/conversation »), avec sujets gradués (démarrer aux formats courts type TCF tâche 1-2, monter vers l'argumentatif).
 2. Pipeline de détection (passe A + validation de spans + passe B ; le vote majoritaire peut suivre).
 3. Auto-scan + échelle d'indices complète + consolidation par re-frappe.
