@@ -8,15 +8,18 @@
 
 ## 1. Résumé exécutif
 
-Le profil de l'apprenant — 36 ans, français acquis oralement dans l'enfance, oral fluide, écrit truffé de fautes qu'il ne perçoit pas — est un profil bien documenté par la recherche : le **locuteur « héritage »** (heritage speaker). Son déficit n'est ni le vocabulaire, ni la syntaxe, ni la compréhension : c'est l'absence de **représentations orthographiques** (il écrit « à l'oreille », et ses fautes sonnent juste quand il se relit) et l'absence de la **couche métalinguistique explicite** que l'école donne normalement (raisonner sur la langue comme objet).
+Le profil de l'apprenant — 36 ans, français acquis oralement dans l'enfance, oral aisé, écrit truffé de fautes qu'il ne perçoit pas — est un profil bien documenté par la recherche : le **locuteur « héritage »** (heritage speaker). Précision importante : son oral, acquis enfant puis longtemps non pratiqué, reste marqué par un **registre enfantin/quotidien** ; son niveau global est estimé **~B1/B1+, pas B2** (à confirmer par un diagnostic initial). Il a donc **deux chantiers**, pas un :
+
+1. **La perception et l'orthographe** (le chantier principal et le plus spécifique) : absence de **représentations orthographiques** (il écrit « à l'oreille », et ses fautes sonnent juste quand il se relit) et absence de la **couche métalinguistique explicite** que l'école donne normalement (raisonner sur la langue comme objet).
+2. **L'élévation de la langue vers le B2** : le NCLC 7 exige, au-delà de la correction, la *richesse* — vocabulaire adulte et précis, phrases complexes, connecteurs, argumentation structurée, registre formel. Un texte sans fautes mais enfantin ne passe pas la barre du critère linguistique et pragmatique.
 
 Trois conclusions structurantes :
 
-1. **C'est entraînable, et plus vite que pour un apprenant classique.** L'orthographe grammaticale française est un ensemble fermé et petit de systèmes de règles (accords, terminaisons en /E/, homophones). La recherche montre des gains mesurables en écriture libre en **8 à 15 semaines à 10-20 min/jour**, et la maîtrise d'une règle isolée (ex. -er/-é) en quelques jours à quelques semaines. Sa forte compétence orale est un accélérateur (les effets du feedback correctif croissent avec le niveau général).
+1. **C'est entraînable, sur deux horizons distincts.** L'orthographe grammaticale française est un ensemble fermé et petit de systèmes de règles (accords, terminaisons en /E/, homophones) : gains mesurables en écriture libre en **8 à 15 semaines à 10-20 min/jour**, maîtrise d'une règle isolée (ex. -er/-é) en jours-semaines. La montée globale B1→B2 (richesse, argumentation, registre) est un chantier plus long : l'ordre de grandeur générique est de **150-200 heures guidées**, que le format très codifié des épreuves compresse — viser **4 à 6 mois à ~1 h/jour** est réaliste pour l'ensemble, plutôt que les 2-3 mois d'un profil déjà B2 à l'oral.
 2. **Aucun outil existant ne fait ce qu'il lui faut.** Les correcteurs (Antidote, etc.) corrigent à sa place et créent une dépendance mesurée ; Projet Voltaire entraîne la détection mais sur des phrases toutes faites ; les plateformes TEF/TCF notent sans enseigner ; personne ne construit un **modèle personnel de ses fautes** à partir de ses propres textes ni ne l'entraîne à les **détecter lui-même**. Le créneau est vide.
 3. **L'enjeu immigration est précis et l'écrit est le verrou.** NCLC 7 dans les quatre compétences = +50 points CRS + accès aux tirages Entrée express francophones (seuils ~100-150 points sous les tirages généraux). NCLC 7 partout sauf à l'écrit = zéro bonus. Cible : **TEF ≥ 310/450 ou TCF ≥ 10/20** en expression écrite.
 
-**Recommandation d'examen (préliminaire, à confirmer par le routeur diagnostique de l'app) : TCF Canada** — pas d'épreuve « fait divers » (narration au passé qui expose exactement ses faiblesses), une première tâche facile qui engrange des points, seuil NCLC 7 à 50 % de l'échelle contre 69 % au TEF. Le TEF reste préférable si le calendrier est serré (résultats en 1-10 jours) ou s'il préfère deux formats ultra-formulaïques.
+**Recommandation d'examen (préliminaire, à confirmer par le routeur diagnostique de l'app) : TCF Canada** — pas d'épreuve « fait divers » (narration au passé qui expose exactement ses faiblesses), une première tâche facile qui engrange des points, seuil NCLC 7 à 50 % de l'échelle contre 69 % au TEF. Le niveau réel ~B1+ **renforce** ce penchant : les trois tâches du TCF sont graduées (la tâche 1 est de difficulté A2-B1, la tâche 2 B1-B2), ce qui permet à un B1+ de sécuriser des points là où le TEF impose d'emblée une lettre argumentée de 200 mots de facture B2. Le TEF reste préférable si le calendrier est serré (résultats en 1-10 jours) ou s'il préfère deux formats ultra-formulaïques.
 
 ---
 
@@ -86,6 +89,7 @@ Et le contre-modèle, tout aussi documenté : **la correction automatique imméd
 - **Dictée zéro faute solo** (adaptation Nadeau & Fisher) : l'app dicte une phrase (exploite son oreille native) ; il écrit ; *avant* la correction : « De quels mots doutes-tu ? Pourquoi cette terminaison ? » ; puis candidats orthographiques concurrents à départager en argumentant ; puis révélation + règle. L'ingrédient actif est le **raisonnement verbalisé** et le **doute institutionnalisé** — ne jamais sauter à la réponse.
 - **Drills de routines de vérification** : tests de substitution chronométrés (*vendre* pour -er/-é, *avait* pour a/à, *était* pour est/et), flèches de chaînes d'accord — jusqu'à automatisation sous charge.
 - **Réparation de registre** : « réécris cette phrase orale en registre formel » (son risque n° 1 à l'examen après les accords).
+- **Élévation vers le B2 (le deuxième chantier)** : après la correction des fautes, une passe distincte de la session propose des **montées en gamme** — « ta phrase est correcte mais de niveau B1 ; voici comment un candidat B2 l'écrirait » : vocabulaire plus précis (remplacer les mots passe-partout *chose, faire, bien, très*), subordination (« parce que » → « dans la mesure où », relatives, participiales), connecteurs argumentatifs, nominalisations. Chaque montée en gamme adoptée entre dans le corpus de révision espacée au même titre qu'une faute corrigée. Squelettes d'argumentation (thèse → 2-3 arguments + exemples → concession → conclusion) enseignés et exigés progressivement. La correction des fautes et l'élévation restent **visuellement séparées** : une erreur n'est pas un choix de niveau, et inversement.
 - **Examens blancs complets** (60 min, conditions réelles) + **routeur TEF vs TCF** : après un blanc de chaque format, comparaison des pertes par critère → recommandation d'examen chiffrée.
 - **Onboarding métalangage (10 min)** : sujet, COD, participe, groupe nominal — sans ce vocabulaire, le feedback métalinguistique est illisible pour un locuteur héritage jamais scolarisé en français.
 
@@ -101,6 +105,7 @@ Et le contre-modèle, tout aussi documenté : **la correction automatique imméd
 1. **Taux d'auto-détection** (% des fautes trouvées avant l'IA) — la métrique-titre : c'est littéralement la compétence que l'app existe pour construire.
 2. **Fautes /100 mots en texte nouveau** (courbe de tendance) — la métrique que la recherche valide.
 3. **Barres de maîtrise par catégorie**, mappées sur les critères officiels de l'examen.
+3bis. **Indicateur de richesse** (le deuxième chantier) : diversité lexicale, part de phrases complexes, densité de connecteurs — suivi de la montée B1→B2 sur le critère linguistique/pragmatique.
 4. **Estimation NCLC** (TEF /450 et TCF /20, seuils 310 et 10 affichés, clairement étiquetée *estimation*) + compte à rebours vers l'examen transformé en plan de sessions.
 5. Une seule streak sobre (« écrit aujourd'hui »). Pas de points, pas de badges.
 
@@ -143,7 +148,8 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 ## 8. Feuille de route proposée
 
 **MVP (objectif : utilisable par lui en ~1-2 semaines de dev)**
-1. Éditeur silencieux + banque de sujets (5 formats d'épreuve + sujets « vie quotidienne/conversation »).
+0. **Diagnostic initial** : deux courtes productions écrites calibrées → estimation du niveau CECR réel (B1/B1+/B2-) et premier remplissage du profil d'erreurs. Toutes les hypothèses de niveau du présent brief sont à recaler sur ce diagnostic.
+1. Éditeur silencieux + banque de sujets (5 formats d'épreuve + sujets « vie quotidienne/conversation »), avec sujets gradués (démarrer aux formats courts type TCF tâche 1-2, monter vers l'argumentatif).
 2. Pipeline de détection (passe A + validation de spans + passe B ; le vote majoritaire peut suivre).
 3. Auto-scan + échelle d'indices complète + consolidation par re-frappe.
 4. Taxonomie d'erreurs + persistance du corpus personnel (Durable Object).
@@ -159,7 +165,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 10. Mode préparation intensive du format choisi ; banque de connecteurs et formules de lettre formelle ; réparation de registre systématique.
 11. (Plus tard, comme convenu : module expression orale.)
 
-**Attentes honnêtes à afficher dans l'app** : règles étroites → jours-semaines ; taux d'erreur global en texte libre → un trimestre à 10-20 min/jour, 5+ jours/semaine (jamais une grosse session hebdomadaire : la distribution bat la concentration, preuve forte).
+**Attentes honnêtes à afficher dans l'app** : règles étroites → jours-semaines ; taux d'erreur global en texte libre → un trimestre à 10-20 min/jour, 5+ jours/semaine ; montée globale B1→B2 (richesse + argumentation + registre) → **4 à 6 mois à ~1 h/jour**. Jamais une grosse session hebdomadaire : la distribution bat la concentration (preuve forte).
 
 ---
 
@@ -169,6 +175,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 - **Précision de la correction française par LLM non auditée publiquement** → le jeu d'évaluation privé (point 6.5) est non négociable.
 - **Friction pédagogique attendue** : la recherche montre que les apprenants *préfèrent* qu'on leur donne la réponse et perçoivent le socratique comme moins efficace — alors qu'il apprend plus. Lui expliquer le « pourquoi » du design, et autoriser un « montre-moi » par erreur (journalisé).
 - **Règles d'immigration mouvantes** : dater et disclaimer toute affirmation NCLC/CRS ; ne jamais promettre « N fautes = N points » (aucun barème officiel n'existe).
+- **Niveau réel incertain (estimé ~B1/B1+ par le père, non testé)** : si le diagnostic initial révèle un niveau plus bas ou plus haut, recaler la part relative des deux chantiers (perception/orthographe vs élévation B2) et l'horizon de préparation. C'est la première chose que l'app doit mesurer.
 
 ---
 
