@@ -8,7 +8,7 @@
 
 ## 1. Résumé exécutif
 
-Le profil de l'apprenant — 36 ans, français acquis oralement dans l'enfance, oral aisé, écrit truffé de fautes qu'il ne perçoit pas — est un profil bien documenté par la recherche : le **locuteur « héritage »** (heritage speaker). Précision importante : son oral, acquis enfant puis longtemps non pratiqué, reste marqué par un **registre enfantin/quotidien** ; son niveau global est estimé **~B1/B1+, pas B2** (à confirmer par un diagnostic initial). Il a donc **deux chantiers**, pas un :
+Le profil de l'apprenant — 36 ans, français acquis oralement dans l'enfance, oral aisé, écrit truffé de fautes qu'il ne perçoit pas — est un profil bien documenté par la recherche : le **locuteur « héritage »** (heritage speaker). Précision importante : son oral, acquis enfant puis longtemps non pratiqué, reste marqué par un **registre enfantin/quotidien** ; son niveau global attesté par son école est **B1.5 sur les 7 sous-niveaux de B1** (il entame B1.6) — donc **fin de B1, pas encore B2**. Son niveau *à l'écrit* est vraisemblablement en dessous de ce placement global et reste à mesurer par le diagnostic initial. Il a donc **deux chantiers**, pas un :
 
 1. **La perception et l'orthographe** (le chantier principal et le plus spécifique) : absence de **représentations orthographiques** (il écrit « à l'oreille », et ses fautes sonnent juste quand il se relit) et absence de la **couche métalinguistique explicite** que l'école donne normalement (raisonner sur la langue comme objet).
 2. **L'élévation de la langue vers le B2** : le NCLC 7 exige, au-delà de la correction, la *richesse* — vocabulaire adulte et précis, phrases complexes, connecteurs, argumentation structurée, registre formel. Un texte sans fautes mais enfantin ne passe pas la barre du critère linguistique et pragmatique.
@@ -148,7 +148,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 ## 8. Feuille de route proposée
 
 **MVP (objectif : utilisable par lui en ~1-2 semaines de dev)**
-0. **Diagnostic initial** : deux courtes productions écrites calibrées → estimation du niveau CECR réel (B1/B1+/B2-) et premier remplissage du profil d'erreurs. Toutes les hypothèses de niveau du présent brief sont à recaler sur ce diagnostic.
+0. **Diagnostic initial de l'écrit** : deux courtes productions écrites calibrées → estimation du niveau CECR *à l'écrit* (à comparer au placement global B1.5 de son école) et premier remplissage du profil d'erreurs. Toutes les hypothèses de niveau du présent brief sont à recaler sur ce diagnostic.
 1. Éditeur silencieux + banque de sujets (5 formats d'épreuve + sujets « vie quotidienne/conversation »), avec sujets gradués (démarrer aux formats courts type TCF tâche 1-2, monter vers l'argumentatif).
 2. Pipeline de détection (passe A + validation de spans + passe B ; le vote majoritaire peut suivre).
 3. Auto-scan + échelle d'indices complète + consolidation par re-frappe.
@@ -175,7 +175,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 - **Précision de la correction française par LLM non auditée publiquement** → le jeu d'évaluation privé (point 6.5) est non négociable.
 - **Friction pédagogique attendue** : la recherche montre que les apprenants *préfèrent* qu'on leur donne la réponse et perçoivent le socratique comme moins efficace — alors qu'il apprend plus. Lui expliquer le « pourquoi » du design, et autoriser un « montre-moi » par erreur (journalisé).
 - **Règles d'immigration mouvantes** : dater et disclaimer toute affirmation NCLC/CRS ; ne jamais promettre « N fautes = N points » (aucun barème officiel n'existe).
-- **Niveau réel incertain (estimé ~B1/B1+ par le père, non testé)** : si le diagnostic initial révèle un niveau plus bas ou plus haut, recaler la part relative des deux chantiers (perception/orthographe vs élévation B2) et l'horizon de préparation. C'est la première chose que l'app doit mesurer.
+- **Écart probable entre niveau global et niveau écrit** : le placement B1.5 de son école mesure surtout la compétence globale (orale) ; typique du profil héritage, son écrit est sans doute un ou deux crans en dessous. Le diagnostic initial de l'app mesure spécifiquement l'écrit et recale la part relative des deux chantiers (perception/orthographe vs élévation B2) et l'horizon de préparation. Sa progression de cours (B1.6 entamé) fournit un repère externe à recouper trimestriellement.
 
 ---
 
