@@ -115,6 +115,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   <nav id="main-nav">
     <button data-nav="home" id="nav-home">Accueil</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
+    <button data-nav="review" id="nav-review">Réviser</button>
     <button data-nav="chat" id="nav-chat">Parler à Plume</button>
     <button data-nav="dash" id="nav-dash">Tableau de bord</button>
     <button data-nav="settings" id="nav-settings">Réglages</button>
@@ -166,6 +167,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
     </div>
   </div>
 
+  <div class="view" id="v-review">
+    <div class="card">
+      <h2>Réviser 🔁</h2>
+      <div id="review-body"></div>
+    </div>
+  </div>
+
   <div class="view" id="v-chat">
     <div class="card">
       <h2>Parler à Plume 💬</h2>
@@ -191,13 +199,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.2.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.3.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.2.0";
+var PLUME_VERSION = "0.3.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -287,7 +295,7 @@ function api(path,opts){
 }
 
 function defaultState(){
-  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],
+  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],reviews:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
 }
 function saveState(){
@@ -327,15 +335,16 @@ function speak(text,accent){
 
 /* ---------- navigation ---------- */
 function show(view){
-  ["v-login","v-home","v-entrance","v-session","v-dash","v-chat","v-settings"].forEach(function(id){
+  ["v-login","v-home","v-entrance","v-session","v-dash","v-review","v-chat","v-settings"].forEach(function(id){
     $(id).classList.toggle("active",id==="v-"+view);
   });
-  ["home","session","dash","chat","settings"].forEach(function(n){
+  ["home","session","dash","review","chat","settings"].forEach(function(n){
     $("nav-"+n).classList.toggle("active",n===view);
   });
   if(view==="home")renderHome();
   if(view==="dash")renderDash();
   if(view==="chat")renderChat();
+  if(view==="review")renderReview();
   if(view==="settings")renderSettings();
 }
 document.getElementById("main-nav").addEventListener("click",function(ev){
@@ -412,6 +421,8 @@ function renderHome(){
       +'<div class="stat"><b>'+(S.profile.cecrEcrit||"—")+'</b><span>niveau écrit estimé</span></div>'
       +'<div class="stat"><b>'+(S.profile.examTarget||"à décider")+'</b><span>examen visé</span></div>'
       +'</div>';
+    var nDue=dueReviews().length;
+    if(nDue>0)h+='<p style="margin-top:.6rem;">🔁 <b>'+nDue+'</b> item(s) à réviser aujourd\u2019hui — <button class="btn small" id="home-review-btn">Réviser maintenant</button></p>';
     if(last)h+='<p class="muted">Dernière session : '+esc(last.date)+' — '+last.errors100w+' fautes/100 mots, '
       +Math.round(last.selfRate*100)+' % auto-détectées.</p>';
     h+='<div class="row" style="margin-top:1rem;">'
@@ -422,6 +433,7 @@ function renderHome(){
   var b1=$("start-entrance-btn");if(b1)b1.addEventListener("click",startEntrance);
   var b2=$("start-session-btn");if(b2)b2.addEventListener("click",startSession);
   var b3=$("redo-entrance-btn");if(b3)b3.addEventListener("click",startEntrance);
+  var b4=$("home-review-btn");if(b4)b4.addEventListener("click",function(){show("review");});
 }
 
 /* =========================================================
@@ -602,6 +614,9 @@ function applyEntranceToState(){
   if(r.grade&&r.grade.nclc)S.profile.nclc=r.grade.nclc;
   Object.keys(r.counts).forEach(function(c){catStat(c).errors+=r.counts[c];catStat(c).lastSeen=today();});
   S.curriculum=r.curriculum;
+  r.dictee.forEach(function(d){
+    if(!d.ok)addReview("dictee",{text:d.target},d.cats[0]||"AUTRE");
+  });
   S.texts.push({date:today(),subject:"Examen d'entrée — production 1",text:E.prod1,errors:r.errors1});
   S.texts.push({date:today(),subject:"Examen d'entrée — production 2",text:E.prod2,errors:r.errors2});
 }
@@ -746,6 +761,17 @@ function wireSession(){
   document.querySelectorAll(".l-show").forEach(function(btn){
     btn.addEventListener("click",function(){ladderReveal(Number(this.getAttribute("data-i")));});
   });
+  document.querySelectorAll(".l-explain").forEach(function(btn){
+    btn.addEventListener("click",function(){ladderExplain(Number(this.getAttribute("data-i")));});
+  });
+  document.querySelectorAll(".l-quiz").forEach(function(opt){
+    opt.addEventListener("click",function(){
+      var i=Number(this.getAttribute("data-i")),oi=Number(this.getAttribute("data-o"));
+      var l=SS.ladder[i];l.quizDone=true;
+      l.quizMsg=(oi===l.explain.quiz.bonne)?"Bonne réponse ✔":"La bonne réponse était : "+l.explain.quiz.options[l.explain.quiz.bonne];
+      renderSessionKeepScroll();
+    });
+  });
   var lnext=$("l-next");if(lnext)lnext.addEventListener("click",function(){
     SS.consols=buildConsols();
     if(SS.consols.length===0){SS.step=5;finishSession();}
@@ -833,6 +859,26 @@ function renderLadder(){
     if(l.resolved){
       h+='<p style="margin-top:.4rem;">Correction : <b>'+esc(e.original)+' → '+esc(e.correction)+'</b></p>'
         +'<p class="muted">'+esc(e.explanation)+(e.rule?' <i>('+esc(e.rule)+')</i>':"")+'</p>';
+      if(l.explain){
+        h+='<div style="border-top:1px solid var(--border);margin-top:.5rem;padding-top:.5rem;">'
+          +'<p>'+esc(l.explain.explication)+'</p>';
+        (l.explain.exemples||[]).forEach(function(x){
+          h+='<p class="muted"><span class="diffbad">'+esc(x.faux)+'</span> → <span class="diffgood">'+esc(x.juste)+'</span></p>';
+        });
+        if(l.explain.quiz&&!l.quizDone){
+          h+='<p style="margin-top:.4rem;"><b>Quiz :</b> '+esc(l.explain.quiz.question)+'</p>'
+            +(l.explain.quiz.options||[]).map(function(o,oi){
+              return '<span class="opt l-quiz" data-i="'+i+'" data-o="'+oi+'" style="display:block;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;margin:.25rem 0;cursor:pointer;">'+esc(o)+'</span>';
+            }).join("");
+        }else if(l.quizDone){
+          h+='<p class="muted">'+esc(l.quizMsg||"")+'</p>';
+        }
+        h+='</div>';
+      }else if(l.explainLoading){
+        h+='<p class="muted"><span class="spin"></span> Plume prépare une explication approfondie…</p>';
+      }else{
+        h+='<button class="btn ghost small l-explain" data-i="'+i+'" style="margin-top:.4rem;">En savoir plus 💬</button>';
+      }
     }else{
       h+='<div class="row" style="margin-top:.5rem;"><input type="text" id="l-input-'+i+'" placeholder="Ta correction (le passage corrigé)" style="flex:1;min-width:180px;">'
         +'<button class="btn small l-try" data-i="'+i+'">Vérifier</button>'
@@ -931,6 +977,10 @@ function finishSession(){
     selfFound:selfFound,selfRate:selfRate,errors100w:e100,
     surrendered:SS.ladder.filter(function(l){return l.surrendered;}).length});
   S.texts.push({date:today(),subject:SS.sujet.titre,text:SS.text,errors:SS.detected.errors});
+  (SS.consols||[]).forEach(function(c){
+    if(c.orig!==c.corrected)addReview("fix",{text:c.orig,answer:c.corrected},mainCatOf(c));
+  });
+  fetchReport();
   var counts={};
   SS.detected.errors.forEach(function(e){counts[e.category]=(counts[e.category]||0)+1;});
   var merged={};
@@ -958,6 +1008,7 @@ function renderRecap(){
     h+='<div class="ladder-item"><p><b>Montée en gamme :</b></p><div class="sentence-box">'+esc(SS.elevation.b2)+'</div>'
       +'<p class="muted">'+esc(SS.elevation.levier)+'</p></div>';
   }
+  h+='<div id="s-report">'+(SS.report===undefined?'<p class="muted"><span class="spin"></span> Plume rédige ton rapport de session…</p>':renderReport())+'</div>';
   h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="s-finish">Voir le tableau de bord</button></div>';
   return h;
 }
@@ -1053,6 +1104,146 @@ function renderSettings(){
   });
   $("set-logout").addEventListener("click",function(){
     localStorage.removeItem(TOKEN_KEY);S=null;show("login");
+  });
+}
+
+/* =========================================================
+   RÉVISION ESPACÉE (corpus personnel) + RAPPORT + EXPLICATIONS
+========================================================= */
+var INTERVALS=[1,3,7,21,60];
+var RV=null;
+function addReview(type,data,cat){
+  if(!S.reviews)S.reviews=[];
+  S.reviews.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,7),type:type,data:data,cat:cat||"AUTRE",
+    idx:0,due:today(),reps:0,lapses:0});
+}
+function dueReviews(){
+  if(!S||!S.reviews)return [];
+  var d=today();
+  return S.reviews.filter(function(r){return r.due<=d;});
+}
+function gradeReview(item,success){
+  item.reps++;
+  if(success){item.idx=Math.min(item.idx+1,INTERVALS.length-1);}
+  else{item.lapses++;item.idx=0;}
+  var next=new Date(Date.now()+INTERVALS[item.idx]*86400000);
+  item.due=next.toISOString().slice(0,10);
+  var cs=catStat(item.cat);
+  if(success)cs.resolved++;else cs.errors++;
+  saveState();
+}
+function mainCatOf(c){
+  var found="AUTRE";
+  SS.ladder.some(function(l){var sn=sentenceOf(l.err);if(sn.text===c.orig){found=l.err.category;return true;}return false;});
+  return found;
+}
+function renderReview(){
+  var b=$("review-body");
+  if(RV&&RV.queue.length){b.innerHTML=renderReviewItem();wireReviewItem();return;}
+  var due=dueReviews();
+  var topCats=(S.curriculum||[]).slice(0,3);
+  var h='<p class="muted">Tes fautes reviennent juste avant que tu ne les refasses (intervalles croissants : 1 j → 3 j → 1 sem → 3 sem → 2 mois).</p>'
+    +'<div class="statgrid"><div class="stat"><b>'+due.length+'</b><span>à réviser aujourd\u2019hui</span></div>'
+    +'<div class="stat"><b>'+(S.reviews?S.reviews.length:0)+'</b><span>items dans ton corpus</span></div></div>'
+    +'<div class="row" style="margin-top:.8rem;">'
+    +(due.length?'<button class="btn" id="rv-start">Démarrer la révision ('+due.length+')</button>':'<span class="muted">Rien à réviser aujourd\u2019hui ✔</span>')
+    +'<button class="btn ghost" id="rv-dictee">Dictée ciblée'+(topCats.length?' ('+topCats.map(function(c){return esc(CATS[c]||c);}).join(", ")+')':'')+'</button></div>'
+    +'<p class="muted" id="rv-msg" style="margin-top:.6rem;"></p>';
+  b.innerHTML=h;
+  var st=$("rv-start");if(st)st.addEventListener("click",function(){RV={queue:dueReviews(),i:0,phase:"ask"};renderReview();});
+  var dc=$("rv-dictee");if(dc)dc.addEventListener("click",targetedDictation);
+}
+function targetedDictation(){
+  var msg=$("rv-msg");
+  msg.innerHTML='<span class="spin"></span> Plume génère des phrases ciblées sur tes fautes…';
+  var cats=(S.curriculum||[]).slice(0,3);
+  api("/api/dictation",{method:"POST",body:{categories:cats,count:3}}).then(function(d){
+    d.sentences.forEach(function(x){addReview("dictee",{text:x.text},(x.cats&&x.cats[0])||cats[0]||"AUTRE");});
+    saveState();
+    RV={queue:S.reviews.slice(-d.sentences.length),i:0,phase:"ask"};
+    renderReview();
+  }).catch(function(e){msg.textContent="Génération impossible : "+e.message;});
+}
+function renderReviewItem(){
+  var it=RV.queue[RV.i];
+  var h='<p class="muted">Item '+(RV.i+1)+' / '+RV.queue.length+' <span class="badge cat">'+esc(CATS[it.cat]||it.cat)+'</span></p>';
+  if(RV.phase==="ask"){
+    if(it.type==="dictee"){
+      h+='<p><b>Dictée</b> — écoute et écris la phrase exactement.</p>'
+        +'<div class="row" style="margin:.5rem 0;"><button class="btn small ghost" id="rv-play">▶ Écouter</button></div>';
+    }else{
+      h+='<p><b>Corrige cette phrase</b> (elle contient au moins une faute que tu as déjà faite) :</p>'
+        +'<div class="sentence-box">'+esc(it.data.text)+'</div>';
+    }
+    h+='<input type="text" id="rv-input" spellcheck="false" autocomplete="off" placeholder="Ta réponse complète">'
+      +'<div class="row right" style="margin-top:.6rem;"><button class="btn ghost" id="rv-giveup">Montre-moi</button>'
+      +'<button class="btn" id="rv-check">Vérifier</button></div><p class="muted" id="rv-fb"></p>';
+  }else{
+    var target=it.type==="dictee"?it.data.text:it.data.answer;
+    h+='<p>'+(RV.lastOk?'✔ Exact !':'La bonne réponse :')+'</p><div class="sentence-box">'+esc(target)+'</div>'
+      +'<div class="row right"><button class="btn" id="rv-next">'+(RV.i<RV.queue.length-1?"Item suivant":"Terminer")+'</button></div>';
+  }
+  return h;
+}
+function wireReviewItem(){
+  var it=RV.queue[RV.i];
+  var pl=$("rv-play");if(pl)pl.addEventListener("click",function(){speak(it.data.text,S.profile.accent);});
+  var ck=$("rv-check");if(ck)ck.addEventListener("click",function(){
+    var v=$("rv-input").value;
+    var target=it.type==="dictee"?it.data.text:it.data.answer;
+    var ok=norm(v)===norm(target);
+    if(!ok&&norm(v).length&&levenClose(norm(v),norm(target))){$("rv-fb").textContent="Presque — vérifie chaque terminaison.";return;}
+    RV.lastOk=ok;gradeReview(it,ok);RV.phase="show";renderReview();
+  });
+  var gu=$("rv-giveup");if(gu)gu.addEventListener("click",function(){RV.lastOk=false;gradeReview(it,false);RV.phase="show";renderReview();});
+  var inp=$("rv-input");if(inp)inp.addEventListener("keydown",function(e){if(e.key==="Enter"){var c=$("rv-check");if(c)c.click();}});
+  var nx=$("rv-next");if(nx)nx.addEventListener("click",function(){
+    if(RV.i<RV.queue.length-1){RV.i++;RV.phase="ask";renderReview();}
+    else{RV=null;renderReview();toast("Révision terminée ✔");}
+  });
+}
+function levenClose(a,b){
+  if(Math.abs(a.length-b.length)>3)return false;
+  var diff=0,i=0,j=0;
+  while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;}else{diff++;i++;j++;}if(diff>3)return false;}
+  return diff+(a.length-i)+(b.length-j)<=3;
+}
+function fetchReport(){
+  SS.report=undefined;
+  api("/api/report",{method:"POST",body:{text:SS.text,errors:SS.detected.errors}}).then(function(d){
+    SS.report=d;
+    if(SS.step===5)renderSessionKeepScroll();
+  }).catch(function(e){
+    SS.report={bien:[],priorites:[],reformulations:[],error:e.message};
+    if(SS.step===5)renderSessionKeepScroll();
+  });
+}
+function renderReport(){
+  var r=SS.report;
+  if(!r)return "";
+  if(r.error)return '<p class="muted" style="color:var(--danger);">Rapport indisponible : '+esc(r.error)+'</p>';
+  var h='<h3>Rapport de Plume 🖋</h3>';
+  if(r.bien&&r.bien.length){h+='<p><b>Ce que tu as bien fait :</b></p>';r.bien.forEach(function(x){h+='<p class="muted">✔ '+esc(x)+'</p>';});}
+  if(r.priorites&&r.priorites.length){h+='<p style="margin-top:.4rem;"><b>Tes priorités :</b></p>';r.priorites.forEach(function(x){h+='<p class="muted">→ '+esc(x)+'</p>';});}
+  if(r.reformulations&&r.reformulations.length){
+    h+='<p style="margin-top:.4rem;"><b>Vers le B2 :</b></p>';
+    r.reformulations.forEach(function(x){
+      h+='<p class="muted">« '+esc(x.avant)+' »<br>→ <b>« '+esc(x.apres)+' »</b> <i>('+esc(x.levier||"")+')</i></p>';
+    });
+  }
+  return h;
+}
+function ladderExplain(i){
+  var l=SS.ladder[i];
+  l.explainLoading=true;renderSessionKeepScroll();
+  api("/api/explain",{method:"POST",body:{original:l.err.original,correction:l.err.correction,category:l.err.category,rule:l.err.rule}}).then(function(d){
+    l.explainLoading=false;l.explain=d;
+    var cs=catStat(l.err.category);cs.deep=(cs.deep||0)+1;
+    renderSessionKeepScroll();
+  }).catch(function(e){
+    l.explainLoading=false;
+    toast("Explication indisponible : "+e.message,true);
+    renderSessionKeepScroll();
   });
 }
 

@@ -354,6 +354,60 @@ async function elevate(env, sentence) {
 	return extractJson(out);
 }
 
+const DICTATION_SYSTEM = `Tu es Plume, générateur de dictées ciblées pour un apprenant B1+ (locuteur héritage, objectif B2/NCLC 7, vit à Toronto). On te donne des codes de catégories d'erreurs : génère des phrases de dictée NATURELLES (vie quotidienne canadienne, travail, immigration) dont chacune contient un ou deux pièges correspondant exactement à ces catégories. Longueur : 12 à 20 mots. Orthographe et grammaire irréprochables.
+Réponds UNIQUEMENT en JSON : [{"text": "…", "cats": ["CODE"]}]
+
+Taxonomie :
+${taxonomyPrompt}`;
+
+async function makeDictation(env, categories, count) {
+	const out = await callClaude(env, {
+		model: MODEL_BASE,
+		system: DICTATION_SYSTEM,
+		user: `Catégories cibles : ${categories.join(", ")}. Génère ${count} phrases (JSON uniquement).`,
+		temperature: 0.7,
+		maxTokens: 1200,
+	});
+	const arr = extractJson(out);
+	if (!Array.isArray(arr)) throw new Error("Génération de dictée invalide.");
+	return arr.filter((s) => s && typeof s.text === "string" && s.text.length > 10).slice(0, count);
+}
+
+const REPORT_SYSTEM = PLUME_PERSONA + `
+
+Tu rédiges le rapport de fin de session d'écriture. On te donne le texte de l'apprenant et la liste de ses erreurs confirmées. Réponds UNIQUEMENT en JSON :
+{"bien": ["3 choses précises réussies dans CE texte"], "priorites": ["3 priorités de travail, formulées en règles actionnables"], "reformulations": [{"avant": "phrase exacte du texte", "apres": "la même idée écrite au niveau B2", "levier": "ce qui a été amélioré"}]}
+2 reformulations maximum, choisies parmi les phrases CORRECTES du texte (pas celles qui contiennent des erreurs).`;
+
+async function makeReport(env, text, errors) {
+	const errList = errors.map((e) => `- "${e.original}" → "${e.correction}" [${e.category}]`).join("\n") || "(aucune)";
+	const out = await callClaude(env, {
+		model: MODEL_BASE,
+		system: REPORT_SYSTEM,
+		user: `Texte :\n<<<\n${text}\n>>>\nErreurs confirmées :\n${errList}\n(JSON uniquement)`,
+		temperature: 0.4,
+		maxTokens: 1200,
+	});
+	return extractJson(out);
+}
+
+const EXPLAIN_SYSTEM = PLUME_PERSONA + `
+
+L'apprenant vient de corriger une erreur et demande une explication approfondie. Donne : une explication complète mais claire (4 à 6 phrases, avec le raisonnement pas à pas), deux exemples contrastés, et une question de quiz.
+Réponds UNIQUEMENT en JSON :
+{"explication": "…", "exemples": [{"faux": "…", "juste": "…"}, {"faux": "…", "juste": "…"}], "quiz": {"question": "…", "options": ["…", "…", "…"], "bonne": 0}}`;
+
+async function explainMore(env, err) {
+	const out = await callClaude(env, {
+		model: MODEL_BASE,
+		system: EXPLAIN_SYSTEM,
+		user: `Erreur : "${err.original}" → "${err.correction}". Catégorie : ${err.category}. Règle : ${err.rule || ""}. ${err.question ? "Question de l'apprenant : " + err.question : ""}\n(JSON uniquement)`,
+		temperature: 0.4,
+		maxTokens: 1200,
+	});
+	return extractJson(out);
+}
+
 export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
@@ -379,7 +433,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.2.0",
+					version: "0.3.0",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
@@ -402,6 +456,32 @@ export default {
 					return json({ error: "Copie manquante ou trop courte." }, 400);
 				}
 				const result = await gradeText(env, body);
+				return json(result);
+			}
+
+			if (url.pathname === "/api/dictation" && request.method === "POST") {
+				const body = await request.json();
+				const cats = Array.isArray(body.categories) && body.categories.length ? body.categories.slice(0, 5) : ["E-VERB", "PP-AVOIR", "HOM-GRAM"];
+				const count = Math.min(Math.max(Number(body.count) || 3, 1), 6);
+				const result = await makeDictation(env, cats, count);
+				return json({ sentences: result });
+			}
+
+			if (url.pathname === "/api/report" && request.method === "POST") {
+				const body = await request.json();
+				if (!body.text || body.text.trim().length < 20) {
+					return json({ error: "Texte manquant." }, 400);
+				}
+				const result = await makeReport(env, body.text, Array.isArray(body.errors) ? body.errors : []);
+				return json(result);
+			}
+
+			if (url.pathname === "/api/explain" && request.method === "POST") {
+				const body = await request.json();
+				if (!body.original || !body.correction) {
+					return json({ error: "Erreur à expliquer manquante." }, 400);
+				}
+				const result = await explainMore(env, body);
 				return json(result);
 			}
 
