@@ -1,39 +1,22 @@
-# Cloudflare Workflows Starter Template
+# Plume ✒
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/workflows-starter-template)
+Entraîneur personnel d'écriture du français pour un locuteur « héritage », orienté TEF Canada / TCF Canada.
 
-<!-- dash-content-start -->
+Plume n'est pas un correcteur : c'est un **entraîneur de perception**. Il n'écrit ni ne corrige à ta place — il t'apprend à voir tes propres fautes (échelle d'indices, auto-scan à voix haute, dictées à deux accents, modèle personnel d'erreurs) et fait monter ton écrit de B1 vers B2.
 
-A real-time, interactive demonstration of [Cloudflare Workflows](https://developers.cloudflare.com/workflows) with live updates via WebSockets and Durable Objects. This template showcases durable multi-step workflows with time-based delays, event-driven pauses, and real-time status visualization.
+## Architecture
 
-<!-- dash-content-end -->
+- `public/index.html` — application complète en un seul fichier (3 thèmes : sombre / terre / terre claire).
+- `worker/index.js` — Worker Cloudflare : proxy Anthropic (aucun appel navigateur→Anthropic), pipeline de détection (3 passes + vote majoritaire + vérification adversariale), notation double passe, Durable Object SQLite pour l'état.
+- `docs/BRIEF-RECOMMANDATIONS.md` — le brief de conception fondé sur la recherche.
 
-![Cloudflare Workflows Starter Template](assets/template-screenshot.png)
-
-## Getting Started
-
-### Installation
+## Déploiement
 
 ```bash
 npm install
+npx wrangler secret put ANTHROPIC_API_KEY   # clé API Anthropic
+npx wrangler secret put PLUME_PASSWORD      # mot de passe d'accès à l'app
+npx wrangler deploy
 ```
 
-### Development
-
-```bash
-npm run dev
-```
-
-Visit `http://localhost:5173` to see the interactive demo.
-
-### Deployment
-
-```bash
-npm run deploy
-```
-
-## Learn More
-
-- [Cloudflare Workflows Documentation](https://developers.cloudflare.com/workflows)
-- [Durable Objects Documentation](https://developers.cloudflare.com/durable-objects)
-- [Workers Documentation](https://developers.cloudflare.com/workers)
+Développement local : `npx wrangler dev` (les secrets locaux vont dans `.dev.vars`).
