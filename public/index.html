@@ -116,6 +116,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
     <button data-nav="home" id="nav-home">Accueil</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
     <button data-nav="review" id="nav-review">Réviser</button>
+    <button data-nav="mock" id="nav-mock">Examen blanc</button>
     <button data-nav="chat" id="nav-chat">Parler à Plume</button>
     <button data-nav="dash" id="nav-dash">Tableau de bord</button>
     <button data-nav="settings" id="nav-settings">Réglages</button>
@@ -167,6 +168,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
     </div>
   </div>
 
+  <div class="view" id="v-mock">
+    <div class="card">
+      <h2>Examen blanc 📝</h2>
+      <div id="mock-body"></div>
+    </div>
+  </div>
+
   <div class="view" id="v-review">
     <div class="card">
       <h2>Réviser 🔁</h2>
@@ -199,13 +207,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.3.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.4.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.3.0";
+var PLUME_VERSION = "0.4.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -295,7 +303,7 @@ function api(path,opts){
 }
 
 function defaultState(){
-  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],reviews:[],
+  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],reviews:[],mocks:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
 }
 function saveState(){
@@ -335,16 +343,17 @@ function speak(text,accent){
 
 /* ---------- navigation ---------- */
 function show(view){
-  ["v-login","v-home","v-entrance","v-session","v-dash","v-review","v-chat","v-settings"].forEach(function(id){
+  ["v-login","v-home","v-entrance","v-session","v-dash","v-review","v-mock","v-chat","v-settings"].forEach(function(id){
     $(id).classList.toggle("active",id==="v-"+view);
   });
-  ["home","session","dash","review","chat","settings"].forEach(function(n){
+  ["home","session","dash","review","mock","chat","settings"].forEach(function(n){
     $("nav-"+n).classList.toggle("active",n===view);
   });
   if(view==="home")renderHome();
   if(view==="dash")renderDash();
   if(view==="chat")renderChat();
   if(view==="review")renderReview();
+  if(view==="mock")renderMock();
   if(view==="settings")renderSettings();
 }
 document.getElementById("main-nav").addEventListener("click",function(ev){
@@ -352,7 +361,7 @@ document.getElementById("main-nav").addEventListener("click",function(ev){
   if(!S){toast("Connecte-toi d'abord.");return;}
   var v=b.getAttribute("data-nav");
   if(v==="session"){
-    if(SS&&SS.step>0&&SS.step<5){show("session");renderSession();}
+    if(SS&&SS.step>0&&SS.step<6){show("session");renderSession();}
     else{startSession();}
   }else{show(v);}
 });
@@ -663,7 +672,7 @@ function renderEntranceResults(){
    SESSION DU JOUR
 ========================================================= */
 var SS=null;
-var S_STEPS=["Sujet","Écriture","Auto-scan","Échelle d'indices","Consolidation","Bilan"];
+var S_STEPS=["Sujet","Écriture","Auto-scan","Échelle d'indices","Révision","Consolidation","Bilan"];
 function startSession(){
   if(!S){toast("Connecte-toi d'abord.");return;}
   if(!S.entrance.done){toast("Commence par l'examen d'entrée.");show("home");return;}
@@ -716,8 +725,10 @@ function renderSession(){
   }else if(SS.step===3){
     h=renderLadder();
   }else if(SS.step===4){
-    h=renderConsolidation();
+    h=renderRevision();
   }else if(SS.step===5){
+    h=renderConsolidation();
+  }else if(SS.step===6){
     h=renderRecap();
   }
   b.innerHTML=h;
@@ -773,10 +784,14 @@ function wireSession(){
     });
   });
   var lnext=$("l-next");if(lnext)lnext.addEventListener("click",function(){
-    SS.consols=buildConsols();
-    if(SS.consols.length===0){SS.step=5;finishSession();}
-    else{SS.consolIdx=0;SS.step=4;renderSession();}
+    if(SS.detected.errors.length===0){SS.consols=[];SS.step=6;finishSession();}
+    else{SS.step=4;renderSession();}
   });
+  var rvOk=$("rev-validate");if(rvOk)rvOk.addEventListener("click",validateRevision);
+  var rvSkip=$("rev-skip");if(rvSkip)rvSkip.addEventListener("click",function(){
+    SS.revised=null;SS.revStats=null;goConsolidation();
+  });
+  var rvNext=$("rev-continue");if(rvNext)rvNext.addEventListener("click",goConsolidation);
   var cok=$("c-check");if(cok)cok.addEventListener("click",checkConsol);
   var cin=$("c-input");if(cin)cin.addEventListener("keydown",function(e){if(e.key==="Enter")checkConsol();});
   var elev=$("s-elevate");if(elev)elev.addEventListener("click",doElevate);
@@ -888,7 +903,7 @@ function renderLadder(){
     h+='</div>';
   });
   var allDone=SS.ladder.every(function(l){return l.resolved;});
-  h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="l-next"'+(allDone?"":" disabled")+'>Passer à la consolidation</button></div>';
+  h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="l-next"'+(allDone?"":" disabled")+'>Continuer</button></div>';
   if(d.discuss&&d.discuss.length){
     h+='<h3>À discuter (pas des fautes certaines)</h3>';
     d.discuss.forEach(function(x){
@@ -961,7 +976,7 @@ function checkConsol(){
   if(norm(inp.value)===norm(c.corrected)){
     c.done=true;
     if(SS.consolIdx<SS.consols.length-1){SS.consolIdx++;renderSession();}
-    else{SS.step=5;finishSession();}
+    else{SS.step=6;finishSession();}
   }else{
     msg.textContent="Pas exactement — compare bien avec le modèle et retente.";
   }
@@ -973,7 +988,8 @@ function finishSession(){
   var e100=words>0?Math.round(nErr/words*1000)/10:0;
   var selfRate=nErr>0?selfFound/nErr:1;
   bumpStreak();
-  S.sessions.push({date:today(),sujetId:SS.sujet.id,subject:SS.sujet.titre,words:words,errors:nErr,
+  var revFixed=SS.revStats?SS.revStats.fixed:null,revTotal=SS.revStats?SS.revStats.total:null;
+  S.sessions.push({date:today(),sujetId:SS.sujet.id,subject:SS.sujet.titre,words:words,errors:nErr,revFixed:revFixed,revTotal:revTotal,
     selfFound:selfFound,selfRate:selfRate,errors100w:e100,
     surrendered:SS.ladder.filter(function(l){return l.surrendered;}).length});
   S.texts.push({date:today(),subject:SS.sujet.titre,text:SS.text,errors:SS.detected.errors});
@@ -1048,6 +1064,15 @@ function renderDash(){
       +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:90px;">'
       +'<polyline points="'+poly+'" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>';
   }
+  if((S.mocks||[]).length){
+    var last3=S.mocks.slice(-3);
+    var avgN=Math.round(last3.reduce(function(x,m){return x+m.nclc;},0)/last3.length*10)/10;
+    h+='<h3>Préparation à l\u2019examen</h3>'
+      +'<p>Tendance sur tes '+last3.length+' derniers examens blancs : <b>NCLC ~'+avgN+'</b> — objectif : <b>NCLC 7</b>.'
+      +(avgN>=7?' Tu es dans la zone ✔ — consolide.':' Écart restant : '+(Math.round((7-avgN)*10)/10)+' niveau·x.')+'</p>';
+    var rec=routerRecommendation();
+    if(rec)h+='<p class="muted">'+rec+'</p>';
+  }
   h+='<h3>Familles de fautes (curriculum en cours)</h3>';
   var cur=(S.curriculum||[]).slice(0,10);
   if(cur.length===0)h+='<p class="muted">Pas encore de données.</p>';
@@ -1105,6 +1130,248 @@ function renderSettings(){
   $("set-logout").addEventListener("click",function(){
     localStorage.removeItem(TOKEN_KEY);S=null;show("login");
   });
+}
+
+/* =========================================================
+   RÉVISION DU BROUILLON (étape à part entière, pattern Khanmigo)
+========================================================= */
+function renderRevision(){
+  if(SS.revStats){
+    var h='<h3>Révision — résultat</h3>'
+      +'<p>Tu as corrigé <b>'+SS.revStats.fixed+' / '+SS.revStats.total+'</b> des erreurs signalées, par toi-même.</p>'
+      +'<p class="muted">Différences entre ton brouillon et ta révision :</p>'
+      +'<div class="sentence-box" style="font-size:1rem;">'+SS.revStats.diffHtml+'</div>'
+      +'<div class="row right" style="margin-top:.8rem;"><button class="btn" id="rev-continue">Passer à la consolidation</button></div>';
+    return h;
+  }
+  return '<h3>Révision de ton texte</h3>'
+    +'<p class="muted">Tu connais maintenant tes erreurs. <b>Corrige ton texte toi-même</b>, sans aide — '
+    +'c’est exactement l’exercice des dix dernières minutes de l’examen. L’échelle d’indices reste dans ta mémoire, pas à l’écran.</p>'
+    +'<textarea class="writing" id="rev-text" spellcheck="false" autocomplete="off">'+esc(SS.text)+'</textarea>'
+    +'<div class="row" style="margin-top:.6rem;"><button class="btn ghost" id="rev-skip">Passer cette étape</button>'
+    +'<div class="spacer"></div><button class="btn" id="rev-validate">Valider ma révision</button></div>';
+}
+function validateRevision(){
+  var ta=$("rev-text");if(!ta)return;
+  SS.revised=ta.value;
+  var total=SS.detected.errors.length,fixed=0;
+  SS.detected.errors.forEach(function(e){
+    var before=SS.text.split(e.original).length-1;
+    var after=SS.revised.split(e.original).length-1;
+    if(after<before)fixed++;
+  });
+  SS.revStats={fixed:fixed,total:total,diffHtml:wordDiff(SS.text,SS.revised)};
+  renderSession();
+}
+function goConsolidation(){
+  SS.consols=buildConsols();
+  if(SS.consols.length===0){SS.step=6;finishSession();}
+  else{SS.consolIdx=0;SS.step=5;renderSession();}
+}
+function wordDiff(a,b){
+  var A=a.split(/\s+/),B=b.split(/\s+/);
+  var n=A.length,m=B.length;
+  if(n*m>250000)return esc(b);
+  var L=[];
+  for(var i=0;i<=n;i++){L.push(new Array(m+1).fill(0));}
+  for(i=n-1;i>=0;i--)for(var j=m-1;j>=0;j--)
+    L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  var out=[];i=0;var jj=0;
+  while(i<n&&jj<m){
+    if(A[i]===B[jj]){out.push(esc(A[i]));i++;jj++;}
+    else if(L[i+1][jj]>=L[i][jj+1]){out.push('<span class="diffbad">'+esc(A[i])+'</span>');i++;}
+    else{out.push('<span class="diffgood">'+esc(B[jj])+'</span>');jj++;}
+  }
+  while(i<n){out.push('<span class="diffbad">'+esc(A[i])+'</span>');i++;}
+  while(jj<m){out.push('<span class="diffgood">'+esc(B[jj])+'</span>');jj++;}
+  return out.join(" ");
+}
+
+/* =========================================================
+   EXAMEN BLANC (formats officiels, notation NCLC prudente, routeur)
+========================================================= */
+var MOCKSETS={
+  "TEF":[
+    {id:"tef1",tasks:[
+      {key:"A",label:"Section A — fait divers (80-120 mots)",min:80,max:120,w:0.35,
+       prompt:"Continue ce fait divers, au passé, sur un ton journalistique, sans donner ton opinion : « Hier soir, une panne d’électricité géante a plongé le centre-ville de Toronto dans le noir pendant deux heures… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ?"},
+      {key:"B",label:"Section B — lettre d’opinion (200 mots minimum)",min:200,max:300,w:0.65,
+       prompt:"Un journal affirme : « Le travail à distance devrait devenir la norme pour tous les emplois de bureau. » Écris au courrier des lecteurs pour donner ton opinion argumentée : introduction, deux ou trois arguments avec exemples, conclusion, formule de politesse."}]},
+    {id:"tef2",tasks:[
+      {key:"A",label:"Section A — fait divers (80-120 mots)",min:80,max:120,w:0.35,
+       prompt:"Continue ce fait divers, au passé, sur un ton journalistique : « Dimanche dernier, un chien perdu a parcouru douze kilomètres à travers la ville pour retrouver sa famille… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ?"},
+      {key:"B",label:"Section B — lettre d’opinion (200 mots minimum)",min:200,max:300,w:0.65,
+       prompt:"Un journal affirme : « Les applications de traduction automatique rendent inutile l’apprentissage des langues. » Écris au courrier des lecteurs pour donner ton opinion argumentée, avec une structure claire et un registre formel."}]}],
+  "TCF":[
+    {id:"tcf1",tasks:[
+      {key:"T1",label:"Tâche 1 — message (60-120 mots)",min:60,max:120,w:0.2,
+       prompt:"Un collègue francophone quitte ton entreprise. Écris un message à l’équipe pour organiser une fête de départ : propose une date, un lieu et demande à chacun de participer."},
+      {key:"T2",label:"Tâche 2 — article (120-150 mots)",min:120,max:150,w:0.35,
+       prompt:"Pour un blog francophone de Toronto, présente ton lieu préféré de la ville : décris-le, raconte un souvenir que tu y as vécu et explique pourquoi tu le recommandes."},
+      {key:"T3",label:"Tâche 3 — comparaison et position (120-180 mots)",min:120,max:180,w:0.45,
+       prompt:"Document 1 : « La voiture électrique est la solution : silencieuse, propre, et de moins en moins chère. »\nDocument 2 : « La voiture électrique déplace la pollution : batteries, électricité, métaux rares — le vrai progrès, c’est moins de voitures. »\n1) Compare les deux points de vue sans donner ton avis (40-60 mots). 2) Donne ta position argumentée (80-120 mots)."}]},
+    {id:"tcf2",tasks:[
+      {key:"T1",label:"Tâche 1 — courriel (60-120 mots)",min:60,max:120,w:0.2,
+       prompt:"Tu as oublié de rendre un livre à la bibliothèque publique de Toronto et tu as reçu un avis d’amende. Écris un courriel : excuse-toi, explique la situation et demande un arrangement."},
+      {key:"T2",label:"Tâche 2 — témoignage (120-150 mots)",min:120,max:150,w:0.35,
+       prompt:"Un site pour nouveaux arrivants recueille des témoignages. Raconte une habitude canadienne qui t’a surpris à ton arrivée, puis donne ton avis sur cette habitude."},
+      {key:"T3",label:"Tâche 3 — comparaison et position (120-180 mots)",min:120,max:180,w:0.45,
+       prompt:"Document 1 : « La semaine de quatre jours augmente la productivité et le bien-être : les essais le prouvent. »\nDocument 2 : « La semaine de quatre jours est un luxe de bureau : hôpitaux, écoles et commerces ne peuvent pas suivre. »\n1) Compare les deux points de vue sans donner ton avis (40-60 mots). 2) Donne ta position argumentée (80-120 mots)."}]}]
+};
+var MK=null;
+function renderMock(){
+  var b=$("mock-body");
+  if(!S.entrance.done){b.innerHTML='<p class="muted">Fais d’abord l’examen d’entrée.</p>';return;}
+  if(!MK){
+    var h='<p class="muted">Conditions réelles : 60 minutes, toutes les tâches du format officiel, aucune aide. '
+      +'À la fin, Plume note ta copie selon les trois familles de critères officielles et estime ton NCLC — '
+      +'<b>estimation prudente</b> (les IA ont tendance à surestimer, la notation est donc calibrée basse).</p>';
+    var doneTef=(S.mocks||[]).filter(function(m){return m.exam==="TEF";}).length;
+    var doneTcf=(S.mocks||[]).filter(function(m){return m.exam==="TCF";}).length;
+    h+='<div class="row" style="margin-top:1rem;">'
+      +'<button class="btn mk-start" data-exam="TEF">Examen blanc TEF ('+doneTef+' fait·s)</button>'
+      +'<button class="btn mk-start" data-exam="TCF">Examen blanc TCF ('+doneTcf+' fait·s)</button></div>';
+    var rec=routerRecommendation();
+    if(rec)h+='<div class="ladder-item" style="margin-top:1rem;"><b>Routeur TEF vs TCF :</b> '+rec+'</div>';
+    if((S.mocks||[]).length){
+      h+='<h3>Tes examens blancs</h3><table class="simple"><tr><th>Date</th><th>Examen</th><th>NCLC estimé (prudent)</th><th>Score estimé</th></tr>';
+      S.mocks.slice(-6).reverse().forEach(function(m){
+        h+='<tr><td>'+esc(m.date)+'</td><td>'+esc(m.exam)+'</td><td>'+m.nclcLow+' – '+m.nclc+'</td><td>'
+          +(m.exam==="TEF"?("~"+m.tef450+"/450"):("~"+m.tcf20+"/20"))+'</td></tr>';
+      });
+      h+='</table>';
+    }
+    b.innerHTML=h;
+    document.querySelectorAll(".mk-start").forEach(function(btn){
+      btn.addEventListener("click",function(){startMock(this.getAttribute("data-exam"));});
+    });
+    return;
+  }
+  if(MK.phase==="write"){
+    var h2='<h3>'+esc(MK.exam)+' — Expression écrite <span class="timer" id="mk-timer">60:00</span></h3>';
+    MK.set.tasks.forEach(function(t,i){
+      h2+='<div class="ladder-item"><b>'+esc(t.label)+'</b>'
+        +'<p class="muted" style="margin:.3rem 0;">'+esc(t.prompt).replace(/\n/g,"<br>")+'</p>'
+        +'<textarea class="writing mk-ta" data-i="'+i+'" style="min-height:160px;" spellcheck="false" autocomplete="off">'+esc(MK.answers[i])+'</textarea>'
+        +'<span class="wordcount" id="mk-wc-'+i+'"></span></div>';
+    });
+    h2+='<div class="row right"><button class="btn" id="mk-submit">Rendre ma copie</button></div>';
+    b.innerHTML=h2;
+    document.querySelectorAll(".mk-ta").forEach(function(ta){
+      var i=Number(ta.getAttribute("data-i"));
+      ta.addEventListener("input",function(){MK.answers[i]=this.value;wc("mk-wc-"+i,this.value,MK.set.tasks[i].min,MK.set.tasks[i].max);});
+      wc("mk-wc-"+i,MK.answers[i],MK.set.tasks[i].min,MK.set.tasks[i].max);
+    });
+    $("mk-submit").addEventListener("click",submitMock);
+    return;
+  }
+  if(MK.phase==="grading"){
+    b.innerHTML='<p><span class="spin"></span> Double correction en cours (deux examinateurs IA indépendants par tâche)… Deux à trois minutes.</p>';
+    return;
+  }
+  if(MK.phase==="results"){
+    b.innerHTML=renderMockResults();
+    var back=$("mk-back");if(back)back.addEventListener("click",function(){MK=null;renderMock();});
+    return;
+  }
+}
+function startMock(exam){
+  var sets=MOCKSETS[exam];
+  var done=(S.mocks||[]).filter(function(m){return m.exam===exam;}).length;
+  var set=sets[done%sets.length];
+  MK={exam:exam,set:set,answers:set.tasks.map(function(){return "";}),phase:"write",result:null};
+  renderMock();
+  startMockTimer();
+}
+var mkTimer=null;
+function startMockTimer(){
+  if(mkTimer)clearInterval(mkTimer);
+  var left=60*60;
+  mkTimer=setInterval(function(){
+    left--;var el=$("mk-timer");if(!el){clearInterval(mkTimer);mkTimer=null;return;}
+    var m=Math.floor(left/60),s2=left%60;
+    el.textContent=(m<10?"0":"")+m+":"+(s2<10?"0":"")+s2;
+    el.className="timer"+(left<300?" low":"");
+    if(left<=0){clearInterval(mkTimer);mkTimer=null;el.textContent="00:00 — rends ta copie";}
+  },1000);
+}
+function submitMock(){
+  var tooShort=MK.set.tasks.filter(function(t,i){return wordsOf(MK.answers[i])<t.min*0.5;});
+  if(tooShort.length&&!MK.confirmedShort){
+    MK.confirmedShort=true;
+    toast("Certaines tâches sont très en dessous du minimum de mots — complète-les, ou re-clique pour rendre quand même.");
+    return;
+  }
+  if(mkTimer){clearInterval(mkTimer);mkTimer=null;}
+  MK.phase="grading";renderMock();
+  var calls=MK.set.tasks.map(function(t,i){
+    return api("/api/grade",{method:"POST",body:{examType:MK.exam+" Canada",task:t.label,prompt:t.prompt,text:MK.answers[i]||"(vide)"}});
+  });
+  Promise.allSettled(calls).then(function(rs){
+    var graded=[],fails=[];
+    rs.forEach(function(r,i){
+      if(r.status==="fulfilled")graded.push({task:MK.set.tasks[i],res:r.value,i:i});
+      else fails.push(MK.set.tasks[i].key+": "+String(r.reason.message||r.reason));
+    });
+    if(graded.length===0){
+      MK.phase="write";renderMock();toast("La notation a échoué : "+fails.join(" ; "),true);return;
+    }
+    var wsum=graded.reduce(function(a,g){return a+g.task.w;},0);
+    function wavg(key){
+      var v=graded.reduce(function(a,g){return a+(Number(g.res[key])||0)*g.task.w;},0)/wsum;
+      return Math.round(v*10)/10;
+    }
+    var nclc=wavg("nclc");
+    MK.result={graded:graded,fails:fails,nclc:nclc,nclcLow:Math.max(4,Math.round((nclc-1)*10)/10),
+      tef450:Math.round(wavg("tef450")),tcf20:Math.round(wavg("tcf20")*10)/10};
+    if(!S.mocks)S.mocks=[];
+    S.mocks.push({date:today(),exam:MK.exam,nclc:nclc,nclcLow:MK.result.nclcLow,tef450:MK.result.tef450,tcf20:MK.result.tcf20});
+    saveState();
+    MK.phase="results";renderMock();
+  });
+}
+function renderMockResults(){
+  var r=MK.result;
+  var target=MK.exam==="TEF"?"310/450":"10/20";
+  var h='<h3>Résultats — '+esc(MK.exam)+' Canada (expression écrite)</h3>'
+    +'<div class="statgrid">'
+    +'<div class="stat"><b>'+r.nclcLow+' – '+r.nclc+'</b><span>NCLC estimé (lecture prudente)</span></div>'
+    +'<div class="stat"><b>'+(MK.exam==="TEF"?("~"+r.tef450+"/450"):("~"+r.tcf20+"/20"))+'</b><span>score estimé (seuil NCLC 7 : '+target+')</span></div>'
+    +'</div>'
+    +'<p class="muted"><i>Estimation d’entraînement calibrée prudemment (les modèles IA surestiment le B2) — seul l’examen officiel fait foi.</i></p>';
+  r.graded.forEach(function(g){
+    h+='<div class="ladder-item"><b>'+esc(g.task.label)+'</b>'
+      +'<p class="muted">Pragmatique '+g.res.pragmatique+'/5 · Linguistique '+g.res.linguistique+'/5 · Sociolinguistique '+g.res.sociolinguistique+'/5</p>'
+      +(g.res.faiblesses&&g.res.faiblesses.length?'<p class="muted">À travailler : '+g.res.faiblesses.map(esc).join(" · ")+'</p>':"")
+      +'</div>';
+  });
+  if(r.fails.length)h+='<p class="muted" style="color:var(--danger);">Tâches non notées : '+esc(r.fails.join(" ; "))+'</p>';
+  h+='<h3>La grille officielle (pour t’auto-évaluer)</h3>'
+    +'<p class="muted"><b>Pragmatique</b> : la tâche est-elle remplie (bon genre de texte, bon nombre de mots, toutes les consignes) ? Le texte est-il organisé en paragraphes avec des connecteurs ?<br>'
+    +'<b>Linguistique</b> : les accords, conjugaisons et l’orthographe sont-ils corrects ? Le vocabulaire est-il précis, les phrases variées ?<br>'
+    +'<b>Sociolinguistique</b> : le registre convient-il au destinataire (vouvoiement, formules de politesse, ton neutre du fait divers) ?</p>';
+  var rec=routerRecommendation();
+  if(rec)h+='<div class="ladder-item"><b>Routeur TEF vs TCF :</b> '+rec+'</div>';
+  h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="mk-back">Retour</button></div>';
+  return h;
+}
+function routerRecommendation(){
+  var tef=(S.mocks||[]).filter(function(m){return m.exam==="TEF";});
+  var tcf=(S.mocks||[]).filter(function(m){return m.exam==="TCF";});
+  if(!tef.length||!tcf.length)return null;
+  var avg=function(arr){return arr.reduce(function(a,m){return a+m.nclc;},0)/arr.length;};
+  var aTef=Math.round(avg(tef)*10)/10,aTcf=Math.round(avg(tcf)*10)/10;
+  var daysLeft=S.profile.examDate?Math.round((new Date(S.profile.examDate)-Date.now())/86400000):null;
+  var msg;
+  if(Math.abs(aTef-aTcf)<=0.3){
+    if(daysLeft!==null&&daysLeft<60)msg="Tes niveaux estimés sont équivalents (TEF "+aTef+" vs TCF "+aTcf+") et ton échéance est proche : <b>penche TEF</b> (résultats en 1-10 jours, repassage plus rapide).";
+    else msg="Tes niveaux estimés sont équivalents (TEF "+aTef+" vs TCF "+aTcf+") : <b>penche TCF</b> — tâches graduées, seuil NCLC 7 à 50 % de l’échelle, pas de fait divers.";
+  }else if(aTcf>aTef){
+    msg="Tu performes mieux au format TCF (NCLC "+aTcf+" vs "+aTef+" au TEF) : <b>vise le TCF Canada</b>.";
+  }else{
+    msg="Tu performes mieux au format TEF (NCLC "+aTef+" vs "+aTcf+" au TCF) : <b>vise le TEF Canada</b>.";
+  }
+  return msg+" (Basé sur "+(tef.length+tcf.length)+" examen·s blanc·s ; refais-en pour affiner.)";
 }
 
 /* =========================================================
@@ -1212,10 +1479,10 @@ function fetchReport(){
   SS.report=undefined;
   api("/api/report",{method:"POST",body:{text:SS.text,errors:SS.detected.errors}}).then(function(d){
     SS.report=d;
-    if(SS.step===5)renderSessionKeepScroll();
+    if(SS.step===6)renderSessionKeepScroll();
   }).catch(function(e){
     SS.report={bien:[],priorites:[],reformulations:[],error:e.message};
-    if(SS.step===5)renderSessionKeepScroll();
+    if(SS.step===6)renderSessionKeepScroll();
   });
 }
 function renderReport(){
