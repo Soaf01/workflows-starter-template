@@ -276,7 +276,71 @@ ${text}
 	};
 }
 
-const ELEVATE_SYSTEM = `Tu es un professeur de français qui aide un apprenant B1 à écrire au niveau B2. Sa phrase est CORRECTE grammaticalement mais peut être enrichie. Propose UNE montée en gamme : vocabulaire plus précis, subordination, connecteur, nominalisation — sans changer le sens, sans jargon inutile.
+/* ---------- Dialogue Plume (hors apprentissage) — SCIM-first ---------- */
+
+const SCIM_URL = "https://scim-api.soaf01.workers.dev";
+
+/**
+ * Protocole studio : tout texte libre destiné à un modèle passe d'abord par SCIM
+ * (analyze → clarify → brief). Le contrat exact de l'API SCIM n'a pas pu être
+ * vérifié (KB inaccessible depuis cette session) : l'appel est donc tenté en
+ * best-effort et, en cas d'échec, le dialogue continue en direct — jamais de
+ * blocage utilisateur. Le drapeau scimUsed est remonté pour transparence.
+ */
+async function tryScim(text) {
+	try {
+		const res = await fetch(SCIM_URL + "/analyze", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ text, source: "plume", mode: "clarify-brief" }),
+		});
+		if (!res.ok) return null;
+		const data = await res.json();
+		return data && (data.brief || data.result || data.analysis) ? data : null;
+	} catch (err) {
+		return null;
+	}
+}
+
+const PLUME_PERSONA = `Tu es Plume, le tuteur personnel d'écriture du français de l'utilisateur. Tu le tutoies. Tu es chaleureux, direct, exigeant et encourageant — jamais condescendant. Tu connais son profil : locuteur « héritage » (français appris oralement dans l'enfance), oral aisé mais registre à élever, écrit en construction, objectif NCLC 7 à l'écrit pour la résidence permanente canadienne (TEF ou TCF Canada). Réponds en français, brièvement (2 à 5 phrases), sauf si on te demande un développement.`;
+
+const CHAT_SYSTEM = PLUME_PERSONA + `
+
+Cette conversation sert à faire connaissance et à parler de tout ce qui N'EST PAS un exercice : son parcours, sa motivation, ses questions sur la méthode, les examens, l'organisation. Tu ne corriges pas ses messages ici (sauf s'il le demande explicitement) — ce n'est pas une session d'entraînement. Si tu apprends des faits utiles sur son profil (parcours, habitudes, échéances), termine ta réponse par une ligne : PROFIL: {"note": "…"} — sinon, pas de ligne PROFIL.`;
+
+async function chat(env, messages) {
+	const last = messages.length ? String(messages[messages.length - 1].content || "") : "";
+	const scim = await tryScim(last);
+	let system = CHAT_SYSTEM;
+	if (scim) {
+		system += "\n\nAnalyse SCIM du dernier message (contexte, à ne pas citer) : " + JSON.stringify(scim).slice(0, 1200);
+	}
+	const convo = messages
+		.slice(-12)
+		.map((m) => (m.role === "user" ? "Utilisateur : " : "Plume : ") + m.content)
+		.join("\n");
+	const out = await callClaude(env, {
+		model: MODEL_BASE,
+		system,
+		user: convo + "\nPlume :",
+		temperature: 0.6,
+		maxTokens: 800,
+	});
+	let reply = out.trim();
+	let profileNote = null;
+	const m = reply.match(/PROFIL:\s*(\{[\s\S]*\})\s*$/);
+	if (m) {
+		try {
+			profileNote = JSON.parse(m[1]).note || null;
+		} catch (err) {
+			profileNote = null;
+		}
+		reply = reply.slice(0, m.index).trim();
+	}
+	return { reply, profileNote, scimUsed: !!scim };
+}
+
+const ELEVATE_SYSTEM = `Tu es Plume, un professeur de français qui aide un apprenant B1 à écrire au niveau B2. Sa phrase est CORRECTE grammaticalement mais peut être enrichie. Propose UNE montée en gamme : vocabulaire plus précis, subordination, connecteur, nominalisation — sans changer le sens, sans jargon inutile.
 Réponds UNIQUEMENT en JSON : {"b2": "la phrase réécrite au niveau B2", "levier": "ce qui a été amélioré, en une phrase"}`;
 
 async function elevate(env, sentence) {
@@ -315,7 +379,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.1.0",
+					version: "0.2.0",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
@@ -338,6 +402,15 @@ export default {
 					return json({ error: "Copie manquante ou trop courte." }, 400);
 				}
 				const result = await gradeText(env, body);
+				return json(result);
+			}
+
+			if (url.pathname === "/api/chat" && request.method === "POST") {
+				const body = await request.json();
+				if (!Array.isArray(body.messages) || body.messages.length === 0) {
+					return json({ error: "Messages manquants." }, 400);
+				}
+				const result = await chat(env, body.messages);
 				return json(result);
 			}
 

@@ -115,6 +115,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   <nav id="main-nav">
     <button data-nav="home" id="nav-home">Accueil</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
+    <button data-nav="chat" id="nav-chat">Parler à Plume</button>
     <button data-nav="dash" id="nav-dash">Tableau de bord</button>
     <button data-nav="settings" id="nav-settings">Réglages</button>
   </nav>
@@ -165,6 +166,16 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
     </div>
   </div>
 
+  <div class="view" id="v-chat">
+    <div class="card">
+      <h2>Parler à Plume 💬</h2>
+      <p class="muted">Ici, on ne s'entraîne pas : on parle. Ton parcours, ta motivation, tes questions sur la méthode ou les examens — Plume apprend à te connaître (et ça enrichit ton profil).</p>
+      <div id="chat-log" style="max-height:50vh;overflow-y:auto;margin:.8rem 0;"></div>
+      <div class="row"><input type="text" id="chat-input" placeholder="Écris à Plume…" style="flex:1;min-width:200px;">
+      <button class="btn" id="chat-send">Envoyer</button></div>
+    </div>
+  </div>
+
   <div class="view" id="v-dash">
     <div class="card">
       <h2>Tableau de bord</h2>
@@ -180,13 +191,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.1.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.2.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.1.0";
+var PLUME_VERSION = "0.2.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -276,7 +287,7 @@ function api(path,opts){
 }
 
 function defaultState(){
-  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null},
+  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
 }
 function saveState(){
@@ -316,14 +327,15 @@ function speak(text,accent){
 
 /* ---------- navigation ---------- */
 function show(view){
-  ["v-login","v-home","v-entrance","v-session","v-dash","v-settings"].forEach(function(id){
+  ["v-login","v-home","v-entrance","v-session","v-dash","v-chat","v-settings"].forEach(function(id){
     $(id).classList.toggle("active",id==="v-"+view);
   });
-  ["home","session","dash","settings"].forEach(function(n){
+  ["home","session","dash","chat","settings"].forEach(function(n){
     $("nav-"+n).classList.toggle("active",n===view);
   });
   if(view==="home")renderHome();
   if(view==="dash")renderDash();
+  if(view==="chat")renderChat();
   if(view==="settings")renderSettings();
 }
 document.getElementById("main-nav").addEventListener("click",function(ev){
@@ -1041,6 +1053,47 @@ function renderSettings(){
   });
   $("set-logout").addEventListener("click",function(){
     localStorage.removeItem(TOKEN_KEY);S=null;show("login");
+  });
+}
+
+/* =========================================================
+   PARLER À PLUME (dialogue hors apprentissage, SCIM-first)
+========================================================= */
+function renderChat(){
+  if(!S.chat)S.chat=[];
+  var log=$("chat-log");
+  if(S.chat.length===0){
+    log.innerHTML='<div class="ladder-item"><b>Plume :</b> Salut ! Moi c\u2019est Plume, ton entra\u00eeneur d\u2019\u00e9criture. Avant de travailler, j\u2019aimerais te conna\u00eetre un peu : raconte-moi ton parcours avec le fran\u00e7ais \u2014 comment tu l\u2019as appris, ce qui te motive, et ton \u00e9ch\u00e9ance pour l\u2019examen.</div>';
+  }else{
+    log.innerHTML=S.chat.map(function(m){
+      return '<div class="ladder-item"><b>'+(m.role==="user"?"Toi":"Plume")+' :</b> '+esc(m.content).replace(/\n/g,"<br>")+'</div>';
+    }).join("");
+  }
+  log.scrollTop=log.scrollHeight;
+  var send=$("chat-send"),inp=$("chat-input");
+  send.onclick=sendChat;
+  inp.onkeydown=function(e){if(e.key==="Enter")sendChat();};
+}
+function sendChat(){
+  var inp=$("chat-input");var txt=inp.value.trim();
+  if(!txt)return;
+  if(!S.chat)S.chat=[];
+  S.chat.push({role:"user",content:txt});
+  inp.value="";renderChat();
+  var log=$("chat-log");
+  log.innerHTML+='<div class="ladder-item" id="chat-pending"><b>Plume :</b> <span class="spin"></span></div>';
+  log.scrollTop=log.scrollHeight;
+  api("/api/chat",{method:"POST",body:{messages:S.chat}}).then(function(d){
+    S.chat.push({role:"assistant",content:d.reply});
+    if(d.profileNote){
+      if(!S.profile.notes)S.profile.notes=[];
+      S.profile.notes.push({date:today(),note:d.profileNote});
+    }
+    if(S.chat.length>40)S.chat=S.chat.slice(-40);
+    saveState();renderChat();
+  }).catch(function(e){
+    var p=$("chat-pending");if(p)p.innerHTML='<b>Plume :</b> <span style="color:var(--danger);">Je n\u2019arrive pas \u00e0 r\u00e9pondre : '+esc(e.message)+'</span>';
+    S.chat.pop();
   });
 }
 
