@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plume — Entraîneur d'écriture</title>
+<script>
+(function(){var t=localStorage.getItem("soafaii_theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();
+</script>
+<style>
+:root, :root[data-theme="dark"]{
+  --bg:#12141a; --bg2:#1a1d26; --panel:#20242f; --panel2:#272c3a;
+  --text:#e8eaf0; --text2:#9aa1b5; --border:#343a4c;
+  --accent:#7c9aff; --accent2:#4a6de0; --accent-text:#0e1120;
+  --ok:#3ecf8e; --warn:#e8b93e; --danger:#e46a6a;
+  --mark:#4a3a1a; --mark-border:#e8b93e;
+  --health-ok:#2ecc71; --health-warn:#f1c40f; --health-err:#e74c3c;
+}
+:root[data-theme="earth"]{
+  --bg:#211c14; --bg2:#2a2419; --panel:#332b1e; --panel2:#3d3425;
+  --text:#f0e9dc; --text2:#b5a98e; --border:#4c4232;
+  --accent:#d9a45b; --accent2:#b07f35; --accent-text:#211c14;
+  --ok:#8fbf6a; --warn:#d9a45b; --danger:#cf6a4f;
+  --mark:#4a3a1a; --mark-border:#d9a45b;
+  --health-ok:#2ecc71; --health-warn:#f1c40f; --health-err:#e74c3c;
+}
+:root[data-theme="light-earth"]{
+  --bg:#f5efe4; --bg2:#ede4d3; --panel:#ffffff; --panel2:#f7f1e5;
+  --text:#3a3226; --text2:#7a6f5c; --border:#d8ccb4;
+  --accent:#a4682f; --accent2:#8a5424; --accent-text:#fdf9f0;
+  --ok:#4f8f3a; --warn:#b07f35; --danger:#b8503c;
+  --mark:#f5e3b8; --mark-border:#b07f35;
+  --health-ok:#2ecc71; --health-warn:#f1c40f; --health-err:#e74c3c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:Georgia,"Times New Roman",serif;line-height:1.55;min-height:100vh;}
+button,input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text);}
+header{display:flex;align-items:center;gap:1rem;padding:.7rem 1.2rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+header h1{font-size:1.3rem;letter-spacing:.5px;}
+header h1 span{color:var(--accent);}
+nav{display:flex;gap:.4rem;flex-wrap:wrap;}
+nav button{background:none;border:1px solid transparent;color:var(--text2);padding:.35rem .8rem;border-radius:8px;cursor:pointer;}
+nav button:hover{color:var(--text);}
+nav button.active{background:var(--panel);color:var(--text);border-color:var(--border);}
+.spacer{flex:1;}
+#health-dot{width:12px;height:12px;border-radius:50%;background:var(--health-warn);display:inline-block;}
+#health-dot.ok{background:var(--health-ok);}
+#health-dot.err{background:var(--health-err);}
+main{max-width:880px;margin:0 auto;padding:1.4rem 1.2rem 4rem;}
+.view{display:none;}
+.view.active{display:block;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1rem;}
+.card h2{font-size:1.25rem;margin-bottom:.6rem;}
+.card h3{font-size:1.05rem;margin:.8rem 0 .4rem;}
+.muted{color:var(--text2);font-size:.92rem;}
+.btn{background:var(--accent);color:var(--accent-text);border:none;padding:.55rem 1.2rem;border-radius:10px;cursor:pointer;font-weight:bold;}
+.btn:hover{background:var(--accent2);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn.ghost{background:none;color:var(--text);border:1px solid var(--border);font-weight:normal;}
+.btn.small{padding:.3rem .7rem;font-size:.88rem;}
+.row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
+.right{justify-content:flex-end;}
+textarea.writing{width:100%;min-height:260px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.05rem;line-height:1.7;resize:vertical;}
+textarea.writing:focus{outline:2px solid var(--accent);}
+input[type=text],input[type=password],input[type=date]{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;width:100%;}
+select{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.4rem .6rem;}
+.timer{font-variant-numeric:tabular-nums;font-size:1.05rem;color:var(--text2);}
+.timer.low{color:var(--danger);}
+.wordcount{color:var(--text2);font-size:.9rem;}
+.wordcount.okrange{color:var(--ok);}
+.progress-steps{display:flex;gap:.35rem;margin-bottom:1rem;flex-wrap:wrap;}
+.progress-steps span{padding:.2rem .6rem;border-radius:20px;border:1px solid var(--border);color:var(--text2);font-size:.82rem;}
+.progress-steps span.done{border-color:var(--ok);color:var(--ok);}
+.progress-steps span.now{background:var(--panel);color:var(--text);border-color:var(--accent);}
+.sentence-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.15rem;line-height:1.9;margin:.6rem 0;}
+.sentence-box.big{font-size:1.45rem;}
+.tok{cursor:pointer;padding:0 2px;border-radius:4px;}
+.tok:hover{background:var(--panel);outline:1px solid var(--border);}
+.tok.suspect{background:var(--mark);outline:1px solid var(--mark-border);}
+.err-span{background:var(--mark);border-bottom:2px solid var(--mark-border);border-radius:3px;padding:0 2px;}
+.ladder-item{border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;margin:.6rem 0;background:var(--panel2);}
+.ladder-item.resolved{border-color:var(--ok);}
+.badge{display:inline-block;padding:.1rem .55rem;border-radius:14px;border:1px solid var(--border);color:var(--text2);font-size:.78rem;margin-left:.4rem;}
+.badge.cat{border-color:var(--accent);color:var(--accent);}
+.badge.okb{border-color:var(--ok);color:var(--ok);}
+.bar-row{display:flex;align-items:center;gap:.6rem;margin:.3rem 0;}
+.bar-row .lbl{width:220px;font-size:.88rem;color:var(--text2);}
+.bar{flex:1;height:12px;background:var(--panel2);border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+.bar i{display:block;height:100%;background:var(--accent);}
+.bar i.good{background:var(--ok);}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.8rem;margin:.6rem 0;}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:.8rem;}
+.stat b{font-size:1.5rem;display:block;}
+.stat span{color:var(--text2);font-size:.85rem;}
+.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);padding:.6rem 1.2rem;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;}
+.toast.show{opacity:1;}
+.toast.error{border-color:var(--danger);color:var(--danger);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--text2);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.mcq{margin:.7rem 0;}
+.mcq .opt{display:block;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.45rem .8rem;margin:.3rem 0;cursor:pointer;}
+.mcq .opt:hover{border-color:var(--accent);}
+.mcq .opt.sel{border-color:var(--accent);background:var(--panel);}
+.diffbad{color:var(--danger);text-decoration:line-through;}
+.diffgood{color:var(--ok);font-weight:bold;}
+table.simple{width:100%;border-collapse:collapse;font-size:.9rem;}
+table.simple td,table.simple th{padding:.35rem .5rem;border-bottom:1px solid var(--border);text-align:left;}
+footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
+@media(max-width:600px){.bar-row .lbl{width:130px;}}
+</style>
+</head>
+<body>
+<header id="app-header">
+  <h1>Plume <span>✒</span></h1>
+  <nav id="main-nav">
+    <button data-nav="home" id="nav-home">Accueil</button>
+    <button data-nav="session" id="nav-session">Session du jour</button>
+    <button data-nav="dash" id="nav-dash">Tableau de bord</button>
+    <button data-nav="settings" id="nav-settings">Réglages</button>
+  </nav>
+  <div class="spacer"></div>
+  <select id="theme-select" title="Thème">
+    <option value="dark">Thème : Sombre</option>
+    <option value="earth">Thème : Terre</option>
+    <option value="light-earth">Thème : Terre claire</option>
+  </select>
+  <span id="health-dot" title="SoafAii Health"></span>
+</header>
+
+<main id="main-view">
+
+  <div class="view" id="v-login">
+    <div class="card" style="max-width:420px;margin:3rem auto;">
+      <h2>Bienvenue sur Plume</h2>
+      <p class="muted">Ton entraîneur personnel d'écriture du français, orienté TEF / TCF Canada.</p>
+      <p style="margin:.8rem 0 .3rem;">Mot de passe</p>
+      <input type="password" id="login-password" autocomplete="current-password">
+      <p id="login-error" class="muted" style="color:var(--danger);margin-top:.4rem;"></p>
+      <div class="row right" style="margin-top:.8rem;">
+        <button class="btn" id="login-btn">Entrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-home">
+    <div class="card" id="home-card">
+      <h2>Accueil</h2>
+      <div id="home-body"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-entrance">
+    <div class="card">
+      <h2>Examen d'entrée</h2>
+      <div class="progress-steps" id="entrance-steps"></div>
+      <div id="entrance-body"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-session">
+    <div class="card">
+      <h2 id="session-title">Session du jour</h2>
+      <div class="progress-steps" id="session-steps"></div>
+      <div id="session-body"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-dash">
+    <div class="card">
+      <h2>Tableau de bord</h2>
+      <div id="dash-body"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-settings">
+    <div class="card">
+      <h2>Réglages</h2>
+      <div id="settings-body"></div>
+    </div>
+  </div>
+
+</main>
+<footer>Plume v0.1.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= Plume v0.1.0 ================= */
+var PLUME_VERSION = "0.1.0";
+var TOKEN_KEY = "plume_token";
+var S = null; // état global persisté
+
+var CATS = {
+  "ACC-SV":"Accord sujet-verbe","ACC-GN":"Accord du groupe nominal","PP-AVOIR":"Participe passé avec avoir",
+  "PP-ETRE":"Participe passé avec être","E-VERB":"Terminaisons en /E/ (-er,-é,-ez,-ait)","HOM-GRAM":"Homophones grammaticaux",
+  "CONJ":"Conjugaison","MODE":"Mode / temps","ACCENTS":"Accents","ORTH-LEX":"Orthographe lexicale","MAJ":"Majuscules",
+  "PONCT":"Ponctuation","REGISTRE":"Registre","ANGLICISME":"Anglicismes","SYNTAXE":"Syntaxe","PREP":"Prépositions",
+  "VOCAB":"Vocabulaire","ELISION":"Élision","NEG":"Négation","AUTRE":"Autre"
+};
+
+var SUJETS = [
+  {id:"t1a",niv:1,fmt:"TCF tâche 1",titre:"Invitation à Toronto",min:60,max:120,minutes:10,prompt:"Tu écris un message à un ami francophone pour l'inviter à visiter Toronto ce week-end. Dis quand, propose deux activités et explique comment vous vous retrouverez. (60 à 120 mots)"},
+  {id:"t1b",niv:1,fmt:"TCF tâche 1",titre:"Courriel au propriétaire",min:60,max:120,minutes:10,prompt:"Le chauffage de ton appartement ne fonctionne plus. Écris un courriel à ta propriétaire : décris le problème, depuis quand il dure, et demande une réparation rapide. (60 à 120 mots)"},
+  {id:"v1",niv:1,fmt:"Vie quotidienne",titre:"Ta dernière conversation",min:80,max:120,minutes:10,prompt:"Résume par écrit ta dernière conversation en français (par exemple avec ton père) : le sujet, les arguments échangés, ta conclusion. (80 à 120 mots)"},
+  {id:"v2",niv:1,fmt:"Vie quotidienne",titre:"Hier, au passé",min:80,max:120,minutes:10,prompt:"Raconte ta journée d'hier, au passé (passé composé et imparfait). Sois précis sur les moments et les lieux. (80 à 120 mots)"},
+  {id:"t2a",niv:2,fmt:"TCF tâche 2",titre:"Premier hiver canadien",min:120,max:150,minutes:15,prompt:"Pour un blog francophone, raconte ton premier hiver au Canada et explique ce que cette expérience t'a appris. (120 à 150 mots)"},
+  {id:"t2b",niv:2,fmt:"TCF tâche 2",titre:"Malentendu culturel",min:120,max:150,minutes:15,prompt:"Un site francophone recueille des témoignages d'immigrants. Raconte un malentendu culturel que tu as vécu, puis donne ton avis sur ce qu'il révèle. (120 à 150 mots)"},
+  {id:"t2c",niv:2,fmt:"TCF tâche 2",titre:"Une réussite récente",min:120,max:150,minutes:15,prompt:"Raconte une réussite récente dont tu es fier, puis explique pourquoi elle compte pour toi. (120 à 150 mots)"},
+  {id:"tefa",niv:2,fmt:"TEF section A",titre:"Fait divers : Queen Street",min:80,max:150,minutes:15,prompt:"Continue ce fait divers, au passé, sur un ton journalistique (sans donner ton opinion) : « Hier matin, un cycliste torontois a été témoin d'une scène inhabituelle sur Queen Street… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ? (80 mots minimum)"},
+  {id:"t3a",niv:3,fmt:"TCF tâche 3",titre:"Le télétravail",min:120,max:180,minutes:20,prompt:"Document 1 : « Le télétravail améliore l'équilibre entre vie privée et travail, et réduit les déplacements inutiles. »\nDocument 2 : « Le télétravail isole les employés et affaiblit la culture d'entreprise. »\n1) Compare les deux points de vue sans donner ton avis (40 à 60 mots). 2) Donne ensuite ta position argumentée (80 à 120 mots)."},
+  {id:"t3b",niv:3,fmt:"TCF tâche 3",titre:"Le bilinguisme officiel",min:120,max:180,minutes:20,prompt:"Document 1 : « Le bilinguisme officiel du Canada est une richesse : il ouvre des portes et rapproche les communautés. »\nDocument 2 : « Le bilinguisme officiel coûte cher et reste théorique hors du Québec. »\n1) Compare les deux points de vue sans donner ton avis (40 à 60 mots). 2) Donne ensuite ta position argumentée (80 à 120 mots)."},
+  {id:"tefb1",niv:3,fmt:"TEF section B",titre:"Les réseaux sociaux",min:200,max:280,minutes:25,prompt:"Un journal affirme : « Les réseaux sociaux ont amélioré la communication entre les gens. » Écris au courrier des lecteurs pour donner ton opinion argumentée : introduction, deux ou trois arguments avec exemples, conclusion, formule de politesse. (200 mots minimum)"},
+  {id:"tefb2",niv:3,fmt:"TEF section B",titre:"La voiture en ville",min:200,max:280,minutes:25,prompt:"Un journal affirme : « La voiture n'a plus sa place en ville. » Écris au courrier des lecteurs pour donner ton opinion argumentée, avec une structure claire et un registre formel. (200 mots minimum)"}
+];
+
+var DICTEE = [
+  {t:"Les décisions que nous avons prises la semaine dernière vont changer les mois à venir.",cats:["PP-AVOIR"]},
+  {t:"Ses collègues sont arrivés en retard et se sont excusés auprès de la directrice.",cats:["PP-ETRE","HOM-GRAM"]},
+  {t:"Il faut continuer à travailler chaque jour pour améliorer les résultats obtenus.",cats:["E-VERB"]},
+  {t:"Elle a envoyé ces documents à ses clients, où figurent tous les tarifs.",cats:["HOM-GRAM"]},
+  {t:"Nous mangeons souvent les plats épicés que ma mère a préparés.",cats:["PP-AVOIR","ACC-GN"]},
+  {t:"Quand il est arrivé au Canada, il a dû s'habituer à l'hiver et à la neige.",cats:["PP-ETRE","ACCENTS","HOM-GRAM"]}
+];
+
+var CHASSE = [
+  {tokens:[
+    {w:"Depuis"},{w:"son"},{w:"arrivé",c:"arrivée",cat:"ACC-GN"},{w:"à"},{w:"Toronto,"},{w:"il"},{w:"a"},
+    {w:"commencer",c:"commencé",cat:"E-VERB"},{w:"à"},{w:"suivre"},{w:"des"},{w:"cours"},{w:"de"},{w:"français."},
+    {w:"Les"},{w:"progrès"},{w:"qu'il"},{w:"a"},{w:"fait",c:"faits",cat:"PP-AVOIR"},{w:"sont"},{w:"impressionnants,"},
+    {w:"mais"},{w:"il"},{w:"doit"},{w:"encore"},{w:"améliorer"},{w:"son"},{w:"écriture."},
+    {w:"Ces",c:"Ses",cat:"HOM-GRAM"},{w:"collègues"},{w:"l'encourage",c:"l'encouragent",cat:"ACC-SV"},{w:"à"},
+    {w:"continuer,"},{w:"car"},{w:"la"},{w:"maîtrise"},{w:"du"},{w:"français"},{w:"peut"},{w:"ouvrir"},{w:"des"},
+    {w:"porte",c:"portes",cat:"ACC-GN"},{w:"importantes."}
+  ]},
+  {tokens:[
+    {w:"Hier"},{w:"soir,"},{w:"nous"},{w:"avons"},{w:"regarder",c:"regardé",cat:"E-VERB"},{w:"un"},{w:"documentaire"},
+    {w:"sur"},{w:"l'immigration."},{w:"Les"},{w:"personnes"},{w:"interviewé",c:"interviewées",cat:"ACC-GN"},
+    {w:"racontait",c:"racontaient",cat:"ACC-SV"},{w:"leur"},{w:"parcours"},{w:"avec"},{w:"émotion."},
+    {w:"Mon"},{w:"frère"},{w:"et"},{w:"moi"},{w:"étions"},{w:"touché",c:"touchés",cat:"PP-ETRE"},{w:"par"},{w:"ces"},
+    {w:"histoires,"},{w:"qui"},{w:"nous"},{w:"ont"},{w:"rappelé"},{w:"les"},{w:"défis"},{w:"que"},{w:"notre"},
+    {w:"famille"},{w:"a"},{w:"vécu.",c:"vécus.",cat:"PP-AVOIR"},{w:"Sa",c:"Ça",cat:"HOM-GRAM"},{w:"nous"},{w:"a"},
+    {w:"donné"},{w:"envie"},{w:"d'en"},{w:"parler"},{w:"ensemble."}
+  ]}
+];
+
+var META_MCQ = [
+  {q:"Dans « Les enfants mangent une pomme », quel est le sujet ?",opts:["Les enfants","mangent","une pomme"],a:0},
+  {q:"Dans « Elle a acheté des fleurs », quel est le COD (complément d'objet direct) ?",opts:["Elle","a acheté","des fleurs"],a:2},
+  {q:"Dans « Ils sont partis tôt », le mot « partis » est…",opts:["un infinitif","un participe passé","un adverbe"],a:1},
+  {q:"Dans « mes nouvelles chaussures noires », les mots s'accordent en…",opts:["genre seulement","nombre seulement","genre et nombre"],a:2},
+  {q:"Pour choisir entre « manger » et « mangé », quel test utiliser ?",opts:["Remplacer par « vendre / vendu »","Lire la phrase à l'envers","Compter les syllabes"],a:0}
+];
+
+/* ---------- utilitaires ---------- */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function toast(msg,isErr){
+  var t=$("toast");t.textContent=msg;t.className="toast show"+(isErr?" error":"");
+  clearTimeout(toast._h);toast._h=setTimeout(function(){t.className="toast";},3500);
+}
+function wordsOf(t){var m=String(t).trim().match(/[A-Za-zÀ-ÖØ-öø-ÿ'-]+/g);return m?m.length:0;}
+function splitSentences(t){var m=String(t).match(/[^.!?…]+[.!?…]*\s*/g);return m?m.map(function(s){return s.trim();}).filter(Boolean):[];}
+function today(){return new Date().toISOString().slice(0,10);}
+function norm(s){return String(s).toLowerCase().replace(/\s+/g," ").replace(/[’]/g,"'").trim();}
+
+function api(path,opts){
+  opts=opts||{};
+  opts.headers=Object.assign({"content-type":"application/json","x-plume-auth":localStorage.getItem(TOKEN_KEY)||""},opts.headers||{});
+  if(opts.body&&typeof opts.body!=="string")opts.body=JSON.stringify(opts.body);
+  return fetch(path,opts).then(function(r){
+    return r.json().catch(function(){throw new Error("Réponse serveur illisible ("+r.status+")");}).then(function(d){
+      if(!r.ok)throw new Error(d&&d.error?d.error:("Erreur "+r.status));
+      return d;
+    });
+  });
+}
+
+function defaultState(){
+  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null},
+    entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
+}
+function saveState(){
+  return api("/api/state",{method:"PUT",body:{state:S}}).catch(function(e){toast("Sauvegarde échouée : "+e.message,true);});
+}
+function catStat(code){
+  if(!S.categories[code])S.categories[code]={errors:0,selfDetected:0,resolved:0,lastSeen:""};
+  return S.categories[code];
+}
+function bumpStreak(){
+  var d=today();
+  if(S.streak.last===d)return;
+  var y=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  S.streak.count=(S.streak.last===y)?S.streak.count+1:1;
+  S.streak.last=d;
+}
+
+/* ---------- TTS (dictées, accents fr-FR / fr-CA) ---------- */
+function pickVoice(accent){
+  var vs=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+  var exact=vs.filter(function(v){return v.lang&&v.lang.replace("_","-").toLowerCase().indexOf(accent.toLowerCase())===0;});
+  if(exact.length)return exact[0];
+  var anyFr=vs.filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("fr")===0;});
+  return anyFr.length?anyFr[0]:null;
+}
+function speak(text,accent){
+  if(!window.speechSynthesis){toast("Synthèse vocale non disponible dans ce navigateur.",true);return;}
+  try{
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    var v=pickVoice(accent||S.profile.accent||"fr-CA");
+    if(v){u.voice=v;u.lang=v.lang;}else{u.lang=accent||"fr-CA";}
+    u.rate=0.88;
+    window.speechSynthesis.speak(u);
+  }catch(e){toast("Lecture audio impossible : "+e.message,true);}
+}
+
+/* ---------- navigation ---------- */
+function show(view){
+  ["v-login","v-home","v-entrance","v-session","v-dash","v-settings"].forEach(function(id){
+    $(id).classList.toggle("active",id==="v-"+view);
+  });
+  ["home","session","dash","settings"].forEach(function(n){
+    $("nav-"+n).classList.toggle("active",n===view);
+  });
+  if(view==="home")renderHome();
+  if(view==="dash")renderDash();
+  if(view==="settings")renderSettings();
+}
+document.getElementById("main-nav").addEventListener("click",function(ev){
+  var b=ev.target.closest("button");if(!b)return;
+  if(!S){toast("Connecte-toi d'abord.");return;}
+  var v=b.getAttribute("data-nav");
+  if(v==="session"){
+    if(SS&&SS.step>0&&SS.step<5){show("session");renderSession();}
+    else{startSession();}
+  }else{show(v);}
+});
+
+/* ---------- thème ---------- */
+$("theme-select").value=document.documentElement.getAttribute("data-theme")||"dark";
+$("theme-select").addEventListener("change",function(){
+  localStorage.setItem("soafaii_theme",this.value);
+  document.documentElement.setAttribute("data-theme",this.value);
+});
+
+/* ---------- SoafAii Health ---------- */
+var PlumeHealth={
+  appId:"plume",project:"SoafAii Studio",
+  criticalIds:["app-header","main-view","main-nav","toast"],
+  check:function(){
+    var dot=$("health-dot");
+    var missing=this.criticalIds.filter(function(id){return !document.getElementById(id);});
+    if(missing.length){dot.className="err";dot.title="Health : IDs manquants : "+missing.join(",");return;}
+    if(!localStorage.getItem(TOKEN_KEY)){dot.className="";dot.title="Health : non connecté";return;}
+    api("/api/health",{method:"GET"}).then(function(h){
+      if(h.ok&&h.aiKey){dot.className="ok";dot.title="SoafAii Health : OK (v"+h.version+")";}
+      else{dot.className="err";dot.title="Health : clé IA absente côté serveur";}
+    }).catch(function(e){dot.className="err";dot.title="Health : API injoignable — "+e.message;});
+  }
+};
+setInterval(function(){PlumeHealth.check();},300000);
+
+/* ---------- login ---------- */
+$("login-btn").addEventListener("click",doLogin);
+$("login-password").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+function doLogin(){
+  var pw=$("login-password").value;
+  $("login-error").textContent="";
+  api("/api/login",{method:"POST",headers:{"x-plume-auth":""},body:{password:pw}}).then(function(d){
+    localStorage.setItem(TOKEN_KEY,d.token);
+    return boot();
+  }).catch(function(e){$("login-error").textContent=e.message;});
+}
+function boot(){
+  return api("/api/state",{method:"GET"}).then(function(d){
+    S=d.state||defaultState();
+    if(!S.version)S=defaultState();
+    PlumeHealth.check();
+    show("home");
+  }).catch(function(e){
+    toast("Chargement de l'état impossible : "+e.message,true);
+    localStorage.removeItem(TOKEN_KEY);
+    show("login");
+  });
+}
+
+/* ---------- accueil ---------- */
+function renderHome(){
+  var h="";
+  if(!S.entrance.done){
+    h+='<p>Bienvenue ! Avant de commencer l’entraînement, Plume doit mesurer ton vrai niveau à l’écrit '
+      +'avec un <b>examen d’entrée</b> (45 à 60 minutes, en une ou deux fois) : deux courtes productions, '
+      +'une dictée (accent français ou québécois, à toi de choisir), une chasse à l’erreur et cinq questions de grammaire.</p>'
+      +'<div class="row" style="margin-top:1rem;"><button class="btn" id="start-entrance-btn">Commencer l’examen d’entrée</button></div>';
+  }else{
+    var last=S.sessions.length?S.sessions[S.sessions.length-1]:null;
+    h+='<div class="statgrid">'
+      +'<div class="stat"><b>'+(S.streak.count||0)+'</b><span>jours d’affilée</span></div>'
+      +'<div class="stat"><b>'+(S.sessions.length)+'</b><span>sessions faites</span></div>'
+      +'<div class="stat"><b>'+(S.profile.cecrEcrit||"—")+'</b><span>niveau écrit estimé</span></div>'
+      +'<div class="stat"><b>'+(S.profile.examTarget||"à décider")+'</b><span>examen visé</span></div>'
+      +'</div>';
+    if(last)h+='<p class="muted">Dernière session : '+esc(last.date)+' — '+last.errors100w+' fautes/100 mots, '
+      +Math.round(last.selfRate*100)+' % auto-détectées.</p>';
+    h+='<div class="row" style="margin-top:1rem;">'
+      +'<button class="btn" id="start-session-btn">Démarrer la session du jour</button>'
+      +'<button class="btn ghost" id="redo-entrance-btn">Refaire l’examen d’entrée</button></div>';
+  }
+  $("home-body").innerHTML=h;
+  var b1=$("start-entrance-btn");if(b1)b1.addEventListener("click",startEntrance);
+  var b2=$("start-session-btn");if(b2)b2.addEventListener("click",startSession);
+  var b3=$("redo-entrance-btn");if(b3)b3.addEventListener("click",startEntrance);
+}
+
+/* =========================================================
+   EXAMEN D'ENTRÉE
+========================================================= */
+var E=null;
+var E_STEPS=["Intro","Production 1","Production 2","Dictée","Chasse à l'erreur","Métalangage","Résultats"];
+function startEntrance(){
+  E={step:0,prod1:"",prod2:"",dictee:DICTEE.map(function(){return "";}),chasse:CHASSE.map(function(p){return p.tokens.map(function(){return false;});}),
+     meta:META_MCQ.map(function(){return -1;}),timer:null,results:null};
+  show("entrance");renderEntrance();
+}
+function eSteps(){
+  $("entrance-steps").innerHTML=E_STEPS.map(function(s,i){
+    var cls=i<E.step?"done":(i===E.step?"now":"");
+    return '<span class="'+cls+'">'+esc(s)+'</span>';
+  }).join("");
+}
+function stopTimer(){if(E&&E.timer){clearInterval(E.timer);E.timer=null;}}
+function startTimer(minutes,elId){
+  stopTimer();
+  var left=minutes*60;
+  E.timer=setInterval(function(){
+    left--;var el=$(elId);if(!el){stopTimer();return;}
+    var m=Math.floor(left/60),s=left%60;
+    el.textContent=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+    el.className="timer"+(left<60?" low":"");
+    if(left<=0){stopTimer();el.textContent="00:00 — temps écoulé (tu peux terminer ta phrase)";}
+  },1000);
+}
+function renderEntrance(){
+  eSteps();var b=$("entrance-body"),h="";
+  if(E.step===0){
+    h='<p>Cet examen sert à mesurer ton niveau réel à l’écrit et à construire ton programme personnalisé. '
+     +'<b>Écris sans aucune aide</b> : pas de correcteur, pas de dictionnaire — comme le jour de l’examen. '
+     +'Les fautes sont exactement ce qu’on cherche à voir : elles construisent ton profil.</p>'
+     +'<p class="muted" style="margin-top:.5rem;">Accent des dictées : <select id="e-accent">'
+     +'<option value="fr-CA"'+(S.profile.accent==="fr-CA"?" selected":"")+'>Québécois (fr-CA)</option>'
+     +'<option value="fr-FR"'+(S.profile.accent==="fr-FR"?" selected":"")+'>Français de France (fr-FR)</option></select></p>'
+     +'<div class="row right" style="margin-top:1rem;"><button class="btn" id="e-next0">Commencer</button></div>';
+  }else if(E.step===1){
+    h='<h3>Production 1 — message simple <span class="timer" id="e-timer1">10:00</span></h3>'
+     +'<p class="muted">Tu écris un message à un ami francophone : tu viens de déménager dans un nouveau quartier de Toronto. '
+     +'Décris le quartier, dis ce que tu aimes et invite-le à venir te voir. (60 à 120 mots)</p>'
+     +'<textarea class="writing" id="e-prod1" spellcheck="false" autocomplete="off">'+esc(E.prod1)+'</textarea>'
+     +'<div class="row"><span class="wordcount" id="e-wc1"></span><div class="spacer"></div>'
+     +'<button class="btn" id="e-next1">Étape suivante</button></div>';
+  }else if(E.step===2){
+    h='<h3>Production 2 — opinion argumentée <span class="timer" id="e-timer2">15:00</span></h3>'
+     +'<p class="muted">Un journal affirme : « Apprendre le français à l’âge adulte est presque impossible. » '
+     +'Donne ton opinion argumentée : introduction, deux arguments avec exemples, conclusion. (100 à 150 mots)</p>'
+     +'<textarea class="writing" id="e-prod2" spellcheck="false" autocomplete="off">'+esc(E.prod2)+'</textarea>'
+     +'<div class="row"><span class="wordcount" id="e-wc2"></span><div class="spacer"></div>'
+     +'<button class="btn" id="e-next2">Étape suivante</button></div>';
+  }else if(E.step===3){
+    h='<h3>Dictée calibrée</h3><p class="muted">Écoute chaque phrase (autant de fois que nécessaire) et écris-la exactement. '
+     +'Accent choisi : '+esc(S.profile.accent==="fr-FR"?"Français de France":"Québécois")+'.</p>';
+    DICTEE.forEach(function(d,i){
+      h+='<div class="row" style="margin:.6rem 0;"><button class="btn small ghost e-play" data-i="'+i+'">▶ Écouter la phrase '+(i+1)+'</button></div>'
+       +'<input type="text" class="e-dictee-input" id="e-dictee-'+i+'" spellcheck="false" autocomplete="off" value="'+esc(E.dictee[i])+'" placeholder="Écris la phrase '+(i+1)+' ici">';
+    });
+    h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="e-next3">Étape suivante</button></div>';
+  }else if(E.step===4){
+    h='<h3>Chasse à l’erreur</h3><p class="muted">Chaque paragraphe contient <b>6 fautes</b>. Clique sur les mots que tu crois fautifs '
+     +'(re-clique pour annuler). Prends ton temps : lis phrase par phrase.</p>';
+    CHASSE.forEach(function(p,pi){
+      h+='<div class="sentence-box" data-p="'+pi+'">'+p.tokens.map(function(t,ti){
+        return '<span class="tok'+(E.chasse[pi][ti]?" suspect":"")+'" data-p="'+pi+'" data-t="'+ti+'">'+esc(t.w)+'</span>';
+      }).join(" ")+'</div>';
+    });
+    h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="e-next4">Étape suivante</button></div>';
+  }else if(E.step===5){
+    h='<h3>Cinq questions de grammaire</h3><p class="muted">Pour savoir quel vocabulaire grammatical utiliser avec toi.</p>';
+    META_MCQ.forEach(function(m,i){
+      h+='<div class="mcq" data-q="'+i+'"><p><b>'+(i+1)+'.</b> '+esc(m.q)+'</p>'
+       +m.opts.map(function(o,oi){return '<span class="opt'+(E.meta[i]===oi?" sel":"")+'" data-q="'+i+'" data-o="'+oi+'">'+esc(o)+'</span>';}).join("")
+       +'</div>';
+    });
+    h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="e-next5">Terminer et analyser</button></div>';
+  }else if(E.step===6){
+    h=renderEntranceResults();
+  }
+  b.innerHTML=h;
+  wireEntrance();
+}
+function wireEntrance(){
+  var n0=$("e-next0");if(n0)n0.addEventListener("click",function(){
+    S.profile.accent=$("e-accent").value;E.step=1;renderEntrance();startTimer(10,"e-timer1");});
+  var p1=$("e-prod1");if(p1){p1.addEventListener("input",function(){E.prod1=this.value;wc("e-wc1",this.value,60,120);});wc("e-wc1",E.prod1,60,120);}
+  var n1=$("e-next1");if(n1)n1.addEventListener("click",function(){
+    if(wordsOf(E.prod1)<30){toast("Écris au moins 30 mots avant de continuer.");return;}
+    stopTimer();E.step=2;renderEntrance();startTimer(15,"e-timer2");});
+  var p2=$("e-prod2");if(p2){p2.addEventListener("input",function(){E.prod2=this.value;wc("e-wc2",this.value,100,150);});wc("e-wc2",E.prod2,100,150);}
+  var n2=$("e-next2");if(n2)n2.addEventListener("click",function(){
+    if(wordsOf(E.prod2)<50){toast("Écris au moins 50 mots avant de continuer.");return;}
+    stopTimer();E.step=3;renderEntrance();});
+  document.querySelectorAll(".e-play").forEach(function(btn){
+    btn.addEventListener("click",function(){speak(DICTEE[Number(this.getAttribute("data-i"))].t,S.profile.accent);});
+  });
+  document.querySelectorAll(".e-dictee-input").forEach(function(inp,i){
+    inp.addEventListener("input",function(){E.dictee[i]=this.value;});
+  });
+  var n3=$("e-next3");if(n3)n3.addEventListener("click",function(){
+    if(E.dictee.filter(function(d){return d.trim().length>0;}).length<DICTEE.length){toast("Écris les six phrases de la dictée.");return;}
+    E.step=4;renderEntrance();});
+  document.querySelectorAll("#entrance-body .tok").forEach(function(tok){
+    tok.addEventListener("click",function(){
+      var pi=Number(this.getAttribute("data-p")),ti=Number(this.getAttribute("data-t"));
+      E.chasse[pi][ti]=!E.chasse[pi][ti];this.classList.toggle("suspect",E.chasse[pi][ti]);
+    });
+  });
+  var n4=$("e-next4");if(n4)n4.addEventListener("click",function(){E.step=5;renderEntrance();});
+  document.querySelectorAll("#entrance-body .opt").forEach(function(o){
+    o.addEventListener("click",function(){
+      var q=Number(this.getAttribute("data-q")),oi=Number(this.getAttribute("data-o"));
+      E.meta[q]=oi;renderEntrance();
+    });
+  });
+  var n5=$("e-next5");if(n5)n5.addEventListener("click",analyzeEntrance);
+  var fin=$("e-finish");if(fin)fin.addEventListener("click",function(){show("home");});
+}
+function wc(id,text,min,max){
+  var el=$(id);if(!el)return;var n=wordsOf(text);
+  el.textContent=n+" mots (objectif "+min+"–"+max+")";
+  el.className="wordcount"+(n>=min&&n<=max?" okrange":"");
+}
+function analyzeEntrance(){
+  var b=$("entrance-body");
+  b.innerHTML='<p><span class="spin"></span> Analyse en cours — détection des erreurs (3 passes + vérification) et notation de la production 2. '
+    +'Cela prend une à deux minutes.</p>';
+  var det1=api("/api/detect",{method:"POST",body:{text:E.prod1}});
+  var det2=api("/api/detect",{method:"POST",body:{text:E.prod2}});
+  var grade=api("/api/grade",{method:"POST",body:{examType:"diagnostic",task:"opinion argumentée",
+    prompt:"Apprendre le français à l'âge adulte est presque impossible — opinion argumentée",text:E.prod2}});
+  Promise.allSettled([det1,det2,grade]).then(function(rs){
+    var d1=rs[0].status==="fulfilled"?rs[0].value:{errors:[],discuss:[],failed:true};
+    var d2=rs[1].status==="fulfilled"?rs[1].value:{errors:[],discuss:[],failed:true};
+    var g=rs[2].status==="fulfilled"?rs[2].value:null;
+    var fails=rs.filter(function(r){return r.status==="rejected";}).map(function(r){return String(r.reason.message||r.reason);});
+    E.results=computeEntranceResults(d1,d2,g,fails);
+    applyEntranceToState();
+    E.step=6;renderEntrance();
+    saveState();
+  });
+}
+function computeEntranceResults(d1,d2,g,fails){
+  var w1=wordsOf(E.prod1),w2=wordsOf(E.prod2);
+  var allErrors=d1.errors.concat(d2.errors);
+  var e100=(w1+w2)>0?Math.round(allErrors.length/(w1+w2)*1000)/10:0;
+  var dicteeRes=DICTEE.map(function(d,i){
+    var target=d.t.split(/\s+/),got=E.dictee[i].trim().split(/\s+/);
+    var diffs=[];var max=Math.max(target.length,got.length);
+    for(var k=0;k<max;k++){if(norm(target[k]||"")!==norm(got[k]||""))diffs.push({attendu:target[k]||"∅",ecrit:got[k]||"∅"});}
+    return {ok:diffs.length===0,diffs:diffs,cats:d.cats,target:d.t,got:E.dictee[i]};
+  });
+  var chasseTotal=0,chasseFound=0,chasseFalse=0,missedCats=[];
+  CHASSE.forEach(function(p,pi){p.tokens.forEach(function(t,ti){
+    if(t.c){chasseTotal++;if(E.chasse[pi][ti])chasseFound++;else missedCats.push(t.cat);}
+    else if(E.chasse[pi][ti])chasseFalse++;
+  });});
+  var metaScore=META_MCQ.reduce(function(a,m,i){return a+(E.meta[i]===m.a?1:0);},0);
+  var counts={};
+  allErrors.forEach(function(e){counts[e.category]=(counts[e.category]||0)+1;});
+  dicteeRes.forEach(function(r){if(!r.ok)r.cats.forEach(function(c){counts[c]=(counts[c]||0)+1;});});
+  missedCats.forEach(function(c){counts[c]=(counts[c]||0)+1;});
+  var curriculum=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];});
+  var cecr=g&&g.cecr?g.cecr:(e100>8?"B1-":(e100>4?"B1":"B1+"));
+  return {w1:w1,w2:w2,errors1:d1.errors,errors2:d2.errors,discuss:(d1.discuss||[]).concat(d2.discuss||[]),
+    e100:e100,dictee:dicteeRes,chasse:{total:chasseTotal,found:chasseFound,falsePos:chasseFalse},
+    meta:metaScore,grade:g,counts:counts,curriculum:curriculum,cecr:cecr,fails:fails||[]};
+}
+function applyEntranceToState(){
+  var r=E.results;
+  S.entrance={done:true,results:{date:today(),e100:r.e100,cecr:r.cecr,meta:r.meta,
+    chasseRate:r.chasse.total?r.chasse.found/r.chasse.total:0,counts:r.counts,
+    nclc:r.grade?r.grade.nclc:null,tef450:r.grade?r.grade.tef450:null,tcf20:r.grade?r.grade.tcf20:null}};
+  S.profile.cecrEcrit=r.cecr;
+  if(r.grade&&r.grade.nclc)S.profile.nclc=r.grade.nclc;
+  Object.keys(r.counts).forEach(function(c){catStat(c).errors+=r.counts[c];catStat(c).lastSeen=today();});
+  S.curriculum=r.curriculum;
+  S.texts.push({date:today(),subject:"Examen d'entrée — production 1",text:E.prod1,errors:r.errors1});
+  S.texts.push({date:today(),subject:"Examen d'entrée — production 2",text:E.prod2,errors:r.errors2});
+}
+function renderEntranceResults(){
+  var r=E.results;
+  var h='<h3>Tes résultats</h3><div class="statgrid">'
+    +'<div class="stat"><b>'+esc(r.cecr)+'</b><span>niveau écrit estimé</span></div>'
+    +'<div class="stat"><b>'+r.e100+'</b><span>fautes / 100 mots</span></div>'
+    +'<div class="stat"><b>'+r.chasse.found+'/'+r.chasse.total+'</b><span>fautes plantées trouvées</span></div>'
+    +'<div class="stat"><b>'+r.meta+'/5</b><span>métalangage</span></div></div>';
+  if(r.grade){
+    h+='<p class="muted">Notation de la production 2 (double passe IA'+(r.grade.doubleMarked?"":" — une seule passe a abouti")+') : '
+      +'pragmatique '+r.grade.pragmatique+'/5, linguistique '+r.grade.linguistique+'/5, sociolinguistique '+r.grade.sociolinguistique
+      +'/5 — estimation NCLC '+r.grade.nclc+' (TEF ~'+r.grade.tef450+'/450, TCF ~'+r.grade.tcf20+'/20). '
+      +'<i>Estimations d’entraînement, pas des scores officiels.</i></p>';
+    if(r.grade.conseil)h+='<p class="muted">Conseil de l’examinateur : '+esc(r.grade.conseil)+'</p>';
+  }
+  if(r.fails.length)h+='<p class="muted" style="color:var(--danger);">Note : certaines analyses ont échoué ('+esc(r.fails.join(" ; "))+'). Les résultats affichés sont partiels.</p>';
+  h+='<h3>Ton profil de fautes (départ du curriculum)</h3>';
+  var cur=r.curriculum.slice(0,8);
+  if(cur.length===0)h+='<p class="muted">Très peu de fautes détectées — bravo. Les sessions affineront le profil.</p>';
+  var maxC=cur.length?r.counts[cur[0]]:1;
+  cur.forEach(function(c){
+    h+='<div class="bar-row"><span class="lbl">'+esc(CATS[c]||c)+'</span><div class="bar"><i style="width:'
+      +Math.round(r.counts[c]/maxC*100)+'%"></i></div><span class="muted">'+r.counts[c]+'</span></div>';
+  });
+  h+='<h3>Dictée — corrections</h3>';
+  r.dictee.forEach(function(d,i){
+    if(d.ok){h+='<p class="muted">Phrase '+(i+1)+' : parfaite ✔</p>';}
+    else{
+      h+='<p class="muted">Phrase '+(i+1)+' : '+d.diffs.map(function(x){
+        return '<span class="diffbad">'+esc(x.ecrit)+'</span> → <span class="diffgood">'+esc(x.attendu)+'</span>';
+      }).join(", ")+'</p>';
+    }
+  });
+  h+='<p style="margin-top:1rem;">Ton curriculum démarre par : <b>'
+    +cur.slice(0,3).map(function(c){return esc(CATS[c]||c);}).join(", ")
+    +'</b>. Chaque session quotidienne cible en priorité ces familles, et le plan se réordonne au fil de tes progrès.</p>'
+    +'<div class="row right" style="margin-top:1rem;"><button class="btn" id="e-finish">Aller à l’accueil</button></div>';
+  return h;
+}
+
+/* =========================================================
+   SESSION DU JOUR
+========================================================= */
+var SS=null;
+var S_STEPS=["Sujet","Écriture","Auto-scan","Échelle d'indices","Consolidation","Bilan"];
+function startSession(){
+  if(!S){toast("Connecte-toi d'abord.");return;}
+  if(!S.entrance.done){toast("Commence par l'examen d'entrée.");show("home");return;}
+  SS={step:0,sujet:null,text:"",sentences:[],suspects:[],detected:null,ladder:[],consols:[],consolIdx:0,scanIdx:0,elevation:null};
+  show("session");renderSession();
+}
+function sSteps(){
+  $("session-steps").innerHTML=S_STEPS.map(function(s,i){
+    var cls=i<SS.step?"done":(i===SS.step?"now":"");
+    return '<span class="'+cls+'">'+esc(s)+'</span>';
+  }).join("");
+}
+function suggestedSujets(){
+  var lvl=S.sessions.length<4?1:(S.sessions.length<10?2:3);
+  var done=S.sessions.map(function(x){return x.sujetId;});
+  var pool=SUJETS.filter(function(s){return s.niv<=lvl&&done.indexOf(s.id)===-1;});
+  if(pool.length===0)pool=SUJETS.filter(function(s){return s.niv<=lvl;});
+  return pool.slice(0,4);
+}
+function renderSession(){
+  sSteps();var b=$("session-body"),h="";
+  if(SS.step===0){
+    h='<p class="muted">Choisis le sujet du jour. Les formats suivent les épreuves réelles du TEF et du TCF Canada.</p>';
+    suggestedSujets().forEach(function(s){
+      h+='<div class="ladder-item"><b>'+esc(s.titre)+'</b><span class="badge">'+esc(s.fmt)+'</span>'
+        +'<span class="badge">'+s.min+'–'+s.max+' mots · '+s.minutes+' min</span>'
+        +'<p class="muted" style="margin:.4rem 0;">'+esc(s.prompt).replace(/\n/g,"<br>")+'</p>'
+        +'<button class="btn small s-choose" data-id="'+s.id+'">Choisir ce sujet</button></div>';
+    });
+  }else if(SS.step===1){
+    h='<h3>'+esc(SS.sujet.titre)+' <span class="timer" id="s-timer">'+(SS.sujet.minutes<10?"0":"")+SS.sujet.minutes+':00</span></h3>'
+     +'<p class="muted">'+esc(SS.sujet.prompt).replace(/\n/g,"<br>")+'</p>'
+     +'<p class="muted">Éditeur silencieux : aucune aide, aucun souligné — comme à l’examen.</p>'
+     +'<textarea class="writing" id="s-text" spellcheck="false" autocomplete="off">'+esc(SS.text)+'</textarea>'
+     +'<div class="row"><span class="wordcount" id="s-wc"></span><div class="spacer"></div>'
+     +'<button class="btn" id="s-done-writing">J’ai terminé</button></div>';
+  }else if(SS.step===2){
+    var sn=SS.sentences[SS.scanIdx];
+    var toks=sn.split(/\s+/);
+    h='<h3>Auto-scan — phrase '+(SS.scanIdx+1)+' / '+SS.sentences.length+'</h3>'
+     +'<p class="muted"><b>Lis cette phrase à voix haute</b>, lentement. Puis clique sur tout mot qui te semble suspect. '
+     +'C’est la technique la plus efficace prouvée par la recherche : articuler force le cerveau à lire ce qui est écrit.</p>'
+     +'<div class="sentence-box'+(S.profile.bigFont?" big":"")+'" id="s-scan-box">'
+     +toks.map(function(w,i){return '<span class="tok'+(isSuspect(SS.scanIdx,i)?" suspect":"")+'" data-w="'+i+'">'+esc(w)+'</span>';}).join(" ")
+     +'</div>'
+     +'<div class="row"><button class="btn ghost small" id="s-bigfont">'+(S.profile.bigFont?"Police normale":"Agrandir la police")+'</button>'
+     +'<div class="spacer"></div>'
+     +(SS.scanIdx>0?'<button class="btn ghost" id="s-scan-prev">Phrase précédente</button>':"")
+     +'<button class="btn" id="s-scan-next">'+(SS.scanIdx<SS.sentences.length-1?"Phrase suivante":"Analyser mes marques")+'</button></div>';
+  }else if(SS.step===3){
+    h=renderLadder();
+  }else if(SS.step===4){
+    h=renderConsolidation();
+  }else if(SS.step===5){
+    h=renderRecap();
+  }
+  b.innerHTML=h;
+  wireSession();
+}
+function isSuspect(si,wi){return SS.suspects.some(function(s){return s.si===si&&s.wi===wi;});}
+function wireSession(){
+  document.querySelectorAll(".s-choose").forEach(function(btn){
+    btn.addEventListener("click",function(){
+      var id=this.getAttribute("data-id");
+      SS.sujet=SUJETS.filter(function(s){return s.id===id;})[0];
+      SS.step=1;renderSession();startSessionTimer();
+    });
+  });
+  var st=$("s-text");
+  if(st){st.addEventListener("input",function(){SS.text=this.value;wc("s-wc",this.value,SS.sujet.min,SS.sujet.max);});wc("s-wc",SS.text,SS.sujet.min,SS.sujet.max);}
+  var dw=$("s-done-writing");if(dw)dw.addEventListener("click",function(){
+    if(wordsOf(SS.text)<Math.min(40,SS.sujet.min*0.6)){toast("Ton texte est encore trop court pour être analysé.");return;}
+    stopSessionTimer();
+    SS.sentences=splitSentences(SS.text);
+    if(SS.sentences.length===0){toast("Impossible de découper le texte en phrases.");return;}
+    SS.scanIdx=0;SS.step=2;renderSession();
+  });
+  var box=$("s-scan-box");
+  if(box)box.addEventListener("click",function(ev){
+    var t=ev.target.closest(".tok");if(!t)return;
+    var wi=Number(t.getAttribute("data-w")),si=SS.scanIdx;
+    var ix=SS.suspects.findIndex(function(s){return s.si===si&&s.wi===wi;});
+    if(ix>=0){SS.suspects.splice(ix,1);t.classList.remove("suspect");}
+    else{SS.suspects.push({si:si,wi:wi,word:t.textContent});t.classList.add("suspect");}
+  });
+  var bf=$("s-bigfont");if(bf)bf.addEventListener("click",function(){S.profile.bigFont=!S.profile.bigFont;renderSession();});
+  var sp=$("s-scan-prev");if(sp)sp.addEventListener("click",function(){SS.scanIdx--;renderSession();});
+  var snx=$("s-scan-next");if(snx)snx.addEventListener("click",function(){
+    if(SS.scanIdx<SS.sentences.length-1){SS.scanIdx++;renderSession();}
+    else{runDetection();}
+  });
+  document.querySelectorAll(".l-try").forEach(function(btn){
+    btn.addEventListener("click",function(){ladderTry(Number(this.getAttribute("data-i")));});
+  });
+  document.querySelectorAll(".l-show").forEach(function(btn){
+    btn.addEventListener("click",function(){ladderReveal(Number(this.getAttribute("data-i")));});
+  });
+  var lnext=$("l-next");if(lnext)lnext.addEventListener("click",function(){
+    SS.consols=buildConsols();
+    if(SS.consols.length===0){SS.step=5;finishSession();}
+    else{SS.consolIdx=0;SS.step=4;renderSession();}
+  });
+  var cok=$("c-check");if(cok)cok.addEventListener("click",checkConsol);
+  var cin=$("c-input");if(cin)cin.addEventListener("keydown",function(e){if(e.key==="Enter")checkConsol();});
+  var elev=$("s-elevate");if(elev)elev.addEventListener("click",doElevate);
+  var fin=$("s-finish");if(fin)fin.addEventListener("click",function(){show("dash");});
+}
+var sessTimer=null;
+function startSessionTimer(){
+  stopSessionTimer();
+  var left=SS.sujet.minutes*60;
+  sessTimer=setInterval(function(){
+    left--;var el=$("s-timer");if(!el){stopSessionTimer();return;}
+    var m=Math.floor(left/60),s=left%60;
+    el.textContent=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+    el.className="timer"+(left<60?" low":"");
+    if(left<=0){stopSessionTimer();el.textContent="00:00 — termine ta phrase et clique « J'ai terminé »";}
+  },1000);
+}
+function stopSessionTimer(){if(sessTimer){clearInterval(sessTimer);sessTimer=null;}}
+
+function runDetection(){
+  $("session-body").innerHTML='<p><span class="spin"></span> Détection en cours — trois passes indépendantes puis vérification adversariale. Une à deux minutes.</p>';
+  api("/api/detect",{method:"POST",body:{text:SS.text}}).then(function(d){
+    SS.detected=d;
+    SS.ladder=d.errors.map(function(e){
+      var chronic=catStat(e.category).errors>=3;
+      return {err:e,level:chronic?1:0,attempts:0,resolved:false,selfFound:overlapSuspect(e),surrendered:false};
+    });
+    SS.step=3;renderSession();
+  }).catch(function(e){
+    $("session-body").innerHTML='<p style="color:var(--danger);">La détection a échoué : '+esc(e.message)
+      +'</p><div class="row"><button class="btn" id="s-retry-detect">Réessayer</button></div>';
+    var r=$("s-retry-detect");if(r)r.addEventListener("click",runDetection);
+  });
+}
+function overlapSuspect(err){
+  // reconstruit la position des mots suspects dans le texte pour comparer aux spans détectés
+  return SS.suspects.some(function(s){
+    var sent=SS.sentences[s.si];
+    var sentStart=SS.text.indexOf(sent);
+    if(sentStart===-1)return false;
+    var words=sent.split(/\s+/);var off=0;
+    for(var i=0;i<s.wi;i++){off=sent.indexOf(words[i],off)+words[i].length;}
+    var wStart=sent.indexOf(words[s.wi],off);
+    if(wStart===-1)return false;
+    var a=sentStart+wStart,b=a+words[s.wi].length;
+    return a<err.end&&b>err.start;
+  });
+}
+function sentenceOf(err){
+  var pos=0;
+  for(var i=0;i<SS.sentences.length;i++){
+    var st=SS.text.indexOf(SS.sentences[i],pos);
+    if(st===-1)continue;
+    var en=st+SS.sentences[i].length;
+    if(err.start>=st&&err.start<en)return {idx:i,text:SS.sentences[i],start:st};
+    pos=en;
+  }
+  return {idx:-1,text:SS.text.slice(Math.max(0,err.start-40),err.end+40),start:0};
+}
+function renderLadder(){
+  var d=SS.detected;
+  var h='<h3>Échelle d’indices</h3>';
+  var found=SS.ladder.filter(function(l){return l.selfFound;}).length;
+  h+='<p class="muted">'+(d.errors.length===0?"Aucune erreur confirmée — très belle copie !":
+    d.errors.length+' erreur(s) confirmée(s) (3 passes + vérification). Tu en avais repéré '+found+' toi-même. '
+    +'Pour chaque erreur : tente une correction à chaque palier — la réponse ne vient qu’en dernier.')+'</p>';
+  SS.ladder.forEach(function(l,i){
+    var e=l.err,sn=sentenceOf(e);
+    h+='<div class="ladder-item'+(l.resolved?" resolved":"")+'" data-err="'+i+'">';
+    h+='<p class="muted">Phrase '+(sn.idx+1)+(l.selfFound?' <span class="badge okb">repérée par toi ✔</span>':"")+'</p>';
+    if(l.level===0){
+      h+='<p>Cette phrase contient une erreur :</p><div class="sentence-box">'+esc(sn.text)+'</div>';
+    }else if(l.level>=1){
+      var rel=e.start-sn.start;
+      var before=sn.text.slice(0,rel),mid=sn.text.slice(rel,rel+(e.end-e.start)),after=sn.text.slice(rel+(e.end-e.start));
+      h+='<div class="sentence-box">'+esc(before)+'<span class="err-span">'+esc(mid)+'</span>'+esc(after)+'</div>';
+    }
+    if(l.level>=2)h+='<p>Catégorie : <span class="badge cat">'+esc(CATS[e.category]||e.category)+'</span></p>';
+    if(l.level>=3)h+='<p style="margin-top:.3rem;">💬 '+esc(e.socratic)+'</p>';
+    if(l.resolved){
+      h+='<p style="margin-top:.4rem;">Correction : <b>'+esc(e.original)+' → '+esc(e.correction)+'</b></p>'
+        +'<p class="muted">'+esc(e.explanation)+(e.rule?' <i>('+esc(e.rule)+')</i>':"")+'</p>';
+    }else{
+      h+='<div class="row" style="margin-top:.5rem;"><input type="text" id="l-input-'+i+'" placeholder="Ta correction (le passage corrigé)" style="flex:1;min-width:180px;">'
+        +'<button class="btn small l-try" data-i="'+i+'">Vérifier</button>'
+        +'<button class="btn ghost small l-show" data-i="'+i+'">'+(l.level<3?"Indice suivant":"Montre-moi")+'</button></div>'
+        +'<p class="muted" id="l-msg-'+i+'"></p>';
+    }
+    h+='</div>';
+  });
+  var allDone=SS.ladder.every(function(l){return l.resolved;});
+  h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="l-next"'+(allDone?"":" disabled")+'>Passer à la consolidation</button></div>';
+  if(d.discuss&&d.discuss.length){
+    h+='<h3>À discuter (pas des fautes certaines)</h3>';
+    d.discuss.forEach(function(x){
+      h+='<p class="muted">« '+esc(x.original)+' » → « '+esc(x.correction)+' » <span class="badge">'+esc(CATS[x.category]||x.category)+'</span> — '+esc(x.explanation)+'</p>';
+    });
+  }
+  return h;
+}
+function ladderTry(i){
+  var l=SS.ladder[i];var inp=$("l-input-"+i);var msg=$("l-msg-"+i);
+  if(!inp||!msg)return;
+  l.attempts++;
+  var guess=norm(inp.value),target=norm(l.err.correction);
+  if(guess.length&&(guess===target||guess.indexOf(target)>=0||target.indexOf(guess)>=0&&guess.length>=Math.max(2,target.length-2))){
+    resolveError(i,false);
+  }else{
+    if(l.level<3){l.level++;msg.textContent="Pas encore — nouvel indice débloqué.";renderSessionKeepScroll();}
+    else{msg.textContent="Pas encore — retente ou clique « Montre-moi ».";}
+  }
+}
+function ladderReveal(i){
+  var l=SS.ladder[i];
+  if(l.level<3){l.level++;renderSessionKeepScroll();}
+  else{l.surrendered=true;resolveError(i,true);}
+}
+function resolveError(i,surrendered){
+  var l=SS.ladder[i];
+  l.resolved=true;l.surrendered=surrendered;
+  var cs=catStat(l.err.category);
+  cs.errors++;cs.lastSeen=today();
+  if(l.selfFound)cs.selfDetected++;
+  if(!surrendered)cs.resolved++;
+  renderSessionKeepScroll();
+}
+function renderSessionKeepScroll(){
+  var y=window.scrollY;renderSession();window.scrollTo(0,y);
+}
+function buildConsols(){
+  var map={};
+  SS.ladder.forEach(function(l){
+    var sn=sentenceOf(l.err);
+    if(!map[sn.idx])map[sn.idx]={idx:sn.idx,orig:sn.text,start:sn.start,errs:[]};
+    map[sn.idx].errs.push(l.err);
+  });
+  return Object.keys(map).map(function(k){
+    var c=map[k];
+    var corrected=c.orig;
+    c.errs.slice().sort(function(a,b){return b.start-a.start;}).forEach(function(e){
+      var rel=e.start-c.start;
+      corrected=corrected.slice(0,rel)+e.correction+corrected.slice(rel+(e.end-e.start));
+    });
+    return {orig:c.orig,corrected:corrected,done:false};
+  });
+}
+function renderConsolidation(){
+  if(SS.consols.length===0){SS.step=5;return renderRecap();}
+  var c=SS.consols[SS.consolIdx];
+  var h='<h3>Consolidation — phrase '+(SS.consolIdx+1)+' / '+SS.consols.length+'</h3>'
+    +'<p class="muted">Retape la phrase corrigée en entier (pas de copier-coller) : c’est le geste qui ancre la forme correcte.</p>'
+    +'<div class="sentence-box">'+esc(c.corrected)+'</div>'
+    +'<input type="text" id="c-input" spellcheck="false" autocomplete="off" placeholder="Retape la phrase ici">'
+    +'<p class="muted" id="c-msg"></p>'
+    +'<div class="row right" style="margin-top:.6rem;"><button class="btn" id="c-check">Vérifier</button></div>';
+  return h;
+}
+function checkConsol(){
+  var c=SS.consols[SS.consolIdx];
+  var inp=$("c-input"),msg=$("c-msg");
+  if(!inp||!msg)return;
+  if(norm(inp.value)===norm(c.corrected)){
+    c.done=true;
+    if(SS.consolIdx<SS.consols.length-1){SS.consolIdx++;renderSession();}
+    else{SS.step=5;finishSession();}
+  }else{
+    msg.textContent="Pas exactement — compare bien avec le modèle et retente.";
+  }
+}
+function finishSession(){
+  var words=wordsOf(SS.text);
+  var nErr=SS.detected.errors.length;
+  var selfFound=SS.ladder.filter(function(l){return l.selfFound;}).length;
+  var e100=words>0?Math.round(nErr/words*1000)/10:0;
+  var selfRate=nErr>0?selfFound/nErr:1;
+  bumpStreak();
+  S.sessions.push({date:today(),sujetId:SS.sujet.id,subject:SS.sujet.titre,words:words,errors:nErr,
+    selfFound:selfFound,selfRate:selfRate,errors100w:e100,
+    surrendered:SS.ladder.filter(function(l){return l.surrendered;}).length});
+  S.texts.push({date:today(),subject:SS.sujet.titre,text:SS.text,errors:SS.detected.errors});
+  var counts={};
+  SS.detected.errors.forEach(function(e){counts[e.category]=(counts[e.category]||0)+1;});
+  var merged={};
+  Object.keys(S.categories).forEach(function(c){merged[c]=S.categories[c].errors;});
+  S.curriculum=Object.keys(merged).sort(function(a,b){return merged[b]-merged[a];});
+  saveState();
+  renderSession();
+}
+function renderRecap(){
+  var last=S.sessions[S.sessions.length-1];
+  var h='<h3>Bilan de la session</h3><div class="statgrid">'
+    +'<div class="stat"><b>'+last.words+'</b><span>mots écrits</span></div>'
+    +'<div class="stat"><b>'+last.errors+'</b><span>erreurs confirmées</span></div>'
+    +'<div class="stat"><b>'+Math.round(last.selfRate*100)+' %</b><span>auto-détectées</span></div>'
+    +'<div class="stat"><b>'+last.errors100w+'</b><span>fautes / 100 mots</span></div></div>'
+    +'<p class="muted">Rappel : la métrique reine est le taux d’auto-détection — c’est la compétence que Plume construit.</p>';
+  var longest=SS.sentences.filter(function(sn){return !SS.ladder.some(function(l){return sentenceOf(l.err).text===sn;});})
+    .sort(function(a,b){return b.length-a.length;})[0];
+  if(longest&&!SS.elevation){
+    h+='<div class="ladder-item"><p><b>Montée en gamme (B1 → B2)</b> — ta phrase correcte la plus riche :</p>'
+      +'<div class="sentence-box">'+esc(longest)+'</div>'
+      +'<button class="btn small" id="s-elevate" data-sentence="'+esc(longest)+'">Comment un candidat B2 l’écrirait ?</button>'
+      +'<p class="muted" id="s-elevate-out"></p></div>';
+  }else if(SS.elevation){
+    h+='<div class="ladder-item"><p><b>Montée en gamme :</b></p><div class="sentence-box">'+esc(SS.elevation.b2)+'</div>'
+      +'<p class="muted">'+esc(SS.elevation.levier)+'</p></div>';
+  }
+  h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="s-finish">Voir le tableau de bord</button></div>';
+  return h;
+}
+function doElevate(){
+  var btn=$("s-elevate"),out=$("s-elevate-out");
+  if(!btn||!out)return;
+  var sentence=btn.getAttribute("data-sentence");
+  out.innerHTML='<span class="spin"></span> Analyse…';
+  api("/api/elevate",{method:"POST",body:{sentence:sentence}}).then(function(d){
+    SS.elevation=d;renderSession();
+  }).catch(function(e){out.textContent="Échec : "+e.message;});
+}
+
+/* =========================================================
+   TABLEAU DE BORD
+========================================================= */
+function renderDash(){
+  var b=$("dash-body");
+  if(!S.entrance.done){b.innerHTML='<p class="muted">Fais d’abord l’examen d’entrée.</p>';return;}
+  var sess=S.sessions;
+  var lastN=sess.slice(-5);
+  var selfRate=lastN.length?Math.round(lastN.reduce(function(a,s){return a+s.selfRate;},0)/lastN.length*100):null;
+  var e100first=S.entrance.results?S.entrance.results.e100:null;
+  var e100last=sess.length?sess[sess.length-1].errors100w:e100first;
+  var h='<div class="statgrid">'
+    +'<div class="stat"><b>'+(selfRate===null?"—":selfRate+" %")+'</b><span>auto-détection (5 dernières sessions)</span></div>'
+    +'<div class="stat"><b>'+(e100last===null?"—":e100last)+'</b><span>fautes/100 mots (départ : '+(e100first===null?"—":e100first)+')</span></div>'
+    +'<div class="stat"><b>'+(S.streak.count||0)+'</b><span>jours d’affilée</span></div>'
+    +'<div class="stat"><b>'+(S.profile.nclc?("NCLC ~"+S.profile.nclc):"—")+'</b><span>estimation écrite (entraînement)</span></div>'
+    +'</div>';
+  if(sess.length>=2){
+    var pts=sess.map(function(s,i){return [i,s.errors100w];});
+    var maxY=Math.max.apply(null,pts.map(function(p){return p[1];}).concat([1]));
+    var W=560,H=90;
+    var poly=pts.map(function(p){return (p[0]/(pts.length-1)*W).toFixed(1)+","+(H-(p[1]/maxY)*(H-10)).toFixed(1);}).join(" ");
+    h+='<h3>Fautes / 100 mots — tendance</h3>'
+      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:90px;">'
+      +'<polyline points="'+poly+'" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>';
+  }
+  h+='<h3>Familles de fautes (curriculum en cours)</h3>';
+  var cur=(S.curriculum||[]).slice(0,10);
+  if(cur.length===0)h+='<p class="muted">Pas encore de données.</p>';
+  var maxE=cur.length&&S.categories[cur[0]]?S.categories[cur[0]].errors:1;
+  cur.forEach(function(c){
+    var cs=S.categories[c]||{errors:0,selfDetected:0};
+    var sr=cs.errors?Math.round(cs.selfDetected/cs.errors*100):0;
+    h+='<div class="bar-row"><span class="lbl">'+esc(CATS[c]||c)+'</span>'
+      +'<div class="bar"><i class="'+(sr>=50?"good":"")+'" style="width:'+Math.max(4,Math.round(cs.errors/maxE*100))+'%"></i></div>'
+      +'<span class="muted">'+cs.errors+' fautes · '+sr+' % vues</span></div>';
+  });
+  if(sess.length){
+    h+='<h3>Historique</h3><table class="simple"><tr><th>Date</th><th>Sujet</th><th>Mots</th><th>Fautes</th><th>Auto-détection</th></tr>';
+    sess.slice(-10).reverse().forEach(function(s){
+      h+='<tr><td>'+esc(s.date)+'</td><td>'+esc(s.subject)+'</td><td>'+s.words+'</td><td>'+s.errors+'</td><td>'+Math.round(s.selfRate*100)+' %</td></tr>';
+    });
+    h+='</table>';
+  }
+  b.innerHTML=h;
+}
+
+/* =========================================================
+   RÉGLAGES
+========================================================= */
+function renderSettings(){
+  var b=$("settings-body");
+  var h='<h3>Examen</h3>'
+    +'<div class="row"><label>Examen visé :</label><select id="set-exam">'
+    +'<option value=""'+(S.profile.examTarget===""?" selected":"")+'>À décider (le routeur t’aidera)</option>'
+    +'<option value="TCF Canada"'+(S.profile.examTarget==="TCF Canada"?" selected":"")+'>TCF Canada</option>'
+    +'<option value="TEF Canada"'+(S.profile.examTarget==="TEF Canada"?" selected":"")+'>TEF Canada</option></select></div>'
+    +'<div class="row" style="margin-top:.5rem;"><label>Date d’examen visée :</label><input type="date" id="set-date" value="'+esc(S.profile.examDate||"")+'" style="width:auto;"></div>'
+    +'<h3>Dictées</h3>'
+    +'<div class="row"><label>Accent :</label><select id="set-accent">'
+    +'<option value="fr-CA"'+(S.profile.accent==="fr-CA"?" selected":"")+'>Québécois (fr-CA)</option>'
+    +'<option value="fr-FR"'+(S.profile.accent==="fr-FR"?" selected":"")+'>Français de France (fr-FR)</option></select>'
+    +'<button class="btn ghost small" id="set-test-voice">Tester la voix</button></div>'
+    +'<h3>Affichage</h3>'
+    +'<div class="row"><label><input type="checkbox" id="set-bigfont"'+(S.profile.bigFont?" checked":"")+'> Police agrandie pendant l’auto-scan</label></div>'
+    +'<h3>Données</h3>'
+    +'<div class="row"><button class="btn ghost" id="set-save">Enregistrer les réglages</button>'
+    +'<button class="btn ghost" id="set-logout">Se déconnecter</button></div>'
+    +'<p class="muted" style="margin-top:1rem;">Plume v'+PLUME_VERSION+' — thème via le sélecteur en haut. Toutes les analyses IA passent par le serveur ; rien ne part de ton navigateur vers Anthropic.</p>';
+  b.innerHTML=h;
+  $("set-save").addEventListener("click",function(){
+    S.profile.examTarget=$("set-exam").value;
+    S.profile.examDate=$("set-date").value;
+    S.profile.accent=$("set-accent").value;
+    S.profile.bigFont=$("set-bigfont").checked;
+    saveState().then(function(){toast("Réglages enregistrés.");});
+  });
+  $("set-test-voice").addEventListener("click",function(){
+    speak("Bonjour ! Voici la voix choisie pour tes dictées.",$("set-accent").value);
+  });
+  $("set-logout").addEventListener("click",function(){
+    localStorage.removeItem(TOKEN_KEY);S=null;show("login");
+  });
+}
+
+/* ---------- démarrage ---------- */
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){};window.speechSynthesis.getVoices();}
+if(localStorage.getItem(TOKEN_KEY)){boot();}else{show("login");}
+PlumeHealth.check();
+</script>
+</body>
+</html>
