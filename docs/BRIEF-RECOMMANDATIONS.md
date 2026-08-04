@@ -106,9 +106,12 @@ Et le contre-modèle, tout aussi documenté : **la correction automatique imméd
 
 ### L'écosystème (spécifique à sa situation)
 
-- **La professeure (Alliance française Toronto — qui est aussi le centre d'examen TEF/TCF)** : export d'un **rapport d'erreurs** (profil de fautes, progression, textes annotés) à apporter en cours ; elle peut cibler ses leçons et valider les estimations NCLC.
+Toute l'interaction pédagogique est portée par l'IA : Plume est le tuteur, le correcteur, l'examinateur blanc et le coach. Deux éléments de son quotidien nourrissent le dispositif sans en être des canaux :
+
 - **La conversation quotidienne avec son père** : sujets d'écriture dérivés (« développe par écrit l'argument que tu as défendu hier ») — le pont oral→écrit est exactement son chantier ; le père peut glisser à l'oral les structures travaillées à l'écrit cette semaine-là.
 - **Son habitude des outils IA** : un atout d'adoption, et un argument à lui donner franchement — Plume utilise l'IA *à l'envers* des correcteurs, parce qu'à l'examen l'IA ne sera pas là.
+
+(Sa formation passée à l'Alliance française reste un acquis — l'app en hérite via le test de positionnement initial — mais aucune fonctionnalité ne dépend d'un professeur humain.)
 
 ---
 
@@ -150,7 +153,7 @@ Le dépôt actuel (starter Cloudflare) fournit exactement la bonne base :
 6. Échauffements générés depuis son corpus + planification espacée.
 7. Dictée zéro faute solo + drills de substitution.
 8. Examens blancs notés + routeur TEF vs TCF.
-9. Export du rapport pour la professeure (PDF/HTML).
+9. Bilan de progression exportable (PDF/HTML) — pour lui-même : profil de fautes, courbes, estimation NCLC datée.
 
 **V2 (après le choix d'examen)**
 10. Mode préparation intensive du format choisi ; banque de connecteurs et formules de lettre formelle ; réparation de registre systématique.
