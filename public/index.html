@@ -236,7 +236,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.7.0";
+var PLUME_VERSION = "0.7.1";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -326,7 +326,7 @@ function api(path,opts){
 }
 
 function defaultState(){
-  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],reviews:[],mocks:[],
+  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[],dicteeSpeed:1,dicteeStreak:0,dicteeFails:0},chat:[],reviews:[],mocks:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
 }
 var persistTimer=null;
@@ -408,8 +408,32 @@ function playTtsUrl(url){
   try{
     if(ttsAudioEl){ttsAudioEl.pause();}
     ttsAudioEl=new Audio(url);
+    try{ttsAudioEl.preservesPitch=true;ttsAudioEl.mozPreservesPitch=true;}catch(_e){}
+    ttsAudioEl.playbackRate=dicteeSpeed();
     ttsAudioEl.play().catch(function(e){toast("Lecture audio bloquée : "+e.message,true);});
   }catch(e){toast("Lecture audio impossible : "+e.message,true);}
+}
+function dicteeSpeed(){
+  var v=S&&S.profile&&S.profile.dicteeSpeed;
+  return (typeof v==="number"&&v>=0.6&&v<=1.1)?v:1;
+}
+function spdLabel(v){return v.toFixed(2).replace(/0$/,"").replace(".",",")+"×";}
+function speedSliderHtml(sfx){
+  var v=dicteeSpeed();
+  return '<div class="ladder-item" style="margin:.6rem 0;">🎧 Vitesse de lecture : <b><span id="spd-val-'+sfx+'">'+spdLabel(v)+'</span></b>'
+    +' &nbsp;·&nbsp; objectif : <b>1,0×</b> (débit naturel, celui de l’examen)'
+    +'<input type="range" id="spd-slider-'+sfx+'" min="0.6" max="1.1" step="0.05" value="'+v+'" style="width:100%;margin-top:.4rem;">'
+    +'<p class="muted" style="margin:.3rem 0 0;">Trop rapide ? Ralentis. Plume remontera la vitesse automatiquement : trois dictées justes d’affilée = +0,05×, jusqu’à 1,0×.</p></div>';
+}
+function wireSpeedSlider(sfx){
+  var s=$("spd-slider-"+sfx);if(!s)return;
+  s.addEventListener("input",function(){
+    S.profile.dicteeSpeed=Math.round(Number(this.value)*100)/100;
+    S.profile.dicteeStreak=0;S.profile.dicteeFails=0;
+    var lv=$("spd-val-"+sfx);if(lv)lv.textContent=spdLabel(dicteeSpeed());
+    if(ttsAudioEl)try{ttsAudioEl.playbackRate=dicteeSpeed();}catch(_e){}
+  });
+  s.addEventListener("change",function(){saveState();});
 }
 function speakBrowser(text,accent){
   if(!window.speechSynthesis){toast("Synthèse vocale non disponible dans ce navigateur.",true);return;}
@@ -418,7 +442,7 @@ function speakBrowser(text,accent){
     var u=new SpeechSynthesisUtterance(text);
     var v=pickVoice(accent);
     if(v){u.voice=v;u.lang=v.lang;}else{u.lang=accent;}
-    u.rate=0.88;
+    u.rate=Math.max(0.5,Math.min(1.2,0.88*dicteeSpeed()));
     window.speechSynthesis.speak(u);
   }catch(e){toast("Lecture audio impossible : "+e.message,true);}
 }
@@ -607,7 +631,9 @@ function renderEntrance(){
      +'<button class="btn" id="e-next2">Étape suivante</button></div>';
   }else if(E.step===3){
     h='<h3>Dictée calibrée</h3><p class="muted">Écoute chaque phrase (autant de fois que nécessaire) et écris-la exactement. '
-     +'Accent choisi : '+esc(S.profile.accent==="fr-FR"?"Français de France":"Québécois")+'.</p>';
+     +'Accent choisi : '+esc(S.profile.accent==="fr-FR"?"Français de France":"Québécois")+'.</p>'
+     +speedSliderHtml("e")
+     +'<p class="muted">La vitesse où tu te sens juste à la limite servira de point de départ à ton entraînement.</p>';
     DICTEE.forEach(function(d,i){
       h+='<div class="row" style="margin:.6rem 0;"><button class="btn small ghost e-play" data-i="'+i+'">▶ Écouter la phrase '+(i+1)+'</button></div>'
        +'<input type="text" class="e-dictee-input" id="e-dictee-'+i+'" spellcheck="false" autocomplete="off" value="'+esc(E.dictee[i])+'" placeholder="Écris la phrase '+(i+1)+' ici">';
@@ -649,6 +675,7 @@ function wireEntrance(){
   var n2=$("e-next2");if(n2)n2.addEventListener("click",function(){
     if(wordsOf(E.prod2)<50){toast("Écris au moins 50 mots avant de continuer.");return;}
     stopTimer();E.step=3;renderEntrance();});
+  wireSpeedSlider("e");
   document.querySelectorAll(".e-play").forEach(function(btn){
     btn.addEventListener("click",function(){speak(DICTEE[Number(this.getAttribute("data-i"))].t,S.profile.accent);});
   });
@@ -1226,6 +1253,7 @@ function renderSettings(){
     +'<option value="fr-CA"'+(S.profile.accent==="fr-CA"?" selected":"")+'>Québécois (fr-CA)</option>'
     +'<option value="fr-FR"'+(S.profile.accent==="fr-FR"?" selected":"")+'>Français de France (fr-FR)</option></select>'
     +'<button class="btn ghost small" id="set-test-voice">Tester la voix</button></div>'
+    +speedSliderHtml("set")
     +'<h3>Affichage</h3>'
     +'<div class="row"><label>Police de l\u2019interface :</label><select id="set-font-ui">'
     +'<option value="calibri">Calibri</option><option value="georgia">Georgia (serif)</option><option value="systeme">Système</option></select></div>'
@@ -1258,6 +1286,7 @@ function renderSettings(){
     S.profile.bigFont=$("set-bigfont").checked;
     saveState().then(function(){toast("Réglages enregistrés.");});
   });
+  wireSpeedSlider("set");
   $("set-test-voice").addEventListener("click",function(){
     speak("Bonjour ! Voici la voix choisie pour tes dictées.",$("set-accent").value);
   });
@@ -1583,7 +1612,28 @@ function gradeReview(item,success){
   item.due=next.toISOString().slice(0,10);
   var cs=catStat(item.cat);
   if(success)cs.resolved++;else cs.errors++;
+  if(item.type==="dictee")adjustDicteeSpeed(success);
   saveState();
+}
+function adjustDicteeSpeed(success){
+  var spd=dicteeSpeed();
+  if(success){
+    S.profile.dicteeFails=0;
+    S.profile.dicteeStreak=(S.profile.dicteeStreak||0)+1;
+    if(S.profile.dicteeStreak>=3&&spd<1){
+      S.profile.dicteeSpeed=Math.min(1,Math.round((spd+0.05)*100)/100);
+      S.profile.dicteeStreak=0;
+      toast("🎧 Trois dictées justes d’affilée — vitesse montée à "+spdLabel(dicteeSpeed())+" (objectif : 1,0×).");
+    }
+  }else{
+    S.profile.dicteeStreak=0;
+    S.profile.dicteeFails=(S.profile.dicteeFails||0)+1;
+    if(S.profile.dicteeFails>=2&&spd>0.6){
+      S.profile.dicteeSpeed=Math.max(0.6,Math.round((spd-0.05)*100)/100);
+      S.profile.dicteeFails=0;
+      toast("🎧 On ralentit un peu : "+spdLabel(dicteeSpeed())+". Tu remonteras vers 1,0× à ton rythme.");
+    }
+  }
 }
 function mainCatOf(c){
   var found="AUTRE";
@@ -1623,7 +1673,8 @@ function renderReviewItem(){
   if(RV.phase==="ask"){
     if(it.type==="dictee"){
       h+='<p><b>Dictée</b> — écoute et écris la phrase exactement.</p>'
-        +'<div class="row" style="margin:.5rem 0;"><button class="btn small ghost" id="rv-play">▶ Écouter</button></div>';
+        +'<div class="row" style="margin:.5rem 0;"><button class="btn small ghost" id="rv-play">▶ Écouter</button></div>'
+        +speedSliderHtml("rv");
     }else{
       h+='<p><b>Corrige cette phrase</b> (elle contient au moins une faute que tu as déjà faite) :</p>'
         +'<div class="sentence-box">'+esc(it.data.text)+'</div>';
@@ -1640,6 +1691,7 @@ function renderReviewItem(){
 }
 function wireReviewItem(){
   var it=RV.queue[RV.i];
+  wireSpeedSlider("rv");
   var pl=$("rv-play");if(pl)pl.addEventListener("click",function(){speak(it.data.text,S.profile.accent);});
   var ck=$("rv-check");if(ck)ck.addEventListener("click",function(){
     var v=$("rv-input").value;

@@ -462,7 +462,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.7.0",
+					version: "0.7.1",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
