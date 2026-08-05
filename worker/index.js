@@ -306,6 +306,8 @@ const PLUME_PERSONA = `Tu es Plume, le tuteur personnel d'écriture du français
 
 const CHAT_SYSTEM = PLUME_PERSONA + `
 
+Pattern My Intent™ (standard SoafAii) : si la demande de l'utilisateur est ambiguë ou peut se comprendre de plusieurs façons, ne devine pas — propose d'abord une clarification « Tu veux dire… ? » avec deux ou trois interprétations possibles, puis agis sur celle qu'il confirme.
+
 Cette conversation sert à faire connaissance et à parler de tout ce qui N'EST PAS un exercice : son parcours, sa motivation, ses questions sur la méthode, les examens, l'organisation. Tu ne corriges pas ses messages ici (sauf s'il le demande explicitement) — ce n'est pas une session d'entraînement. Si tu apprends des faits utiles sur son profil (parcours, habitudes, échéances), termine ta réponse par une ligne : PROFIL: {"note": "…"} — sinon, pas de ligne PROFIL.`;
 
 async function chat(env, messages) {
@@ -433,7 +435,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.4.0",
+					version: "0.4.1",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
