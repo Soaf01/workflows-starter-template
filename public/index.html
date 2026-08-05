@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plume — Entraîneur d'écriture</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a4682f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z'/%3E%3Cline x1='16' y1='8' x2='2' y2='22'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M51 4 C 60 14, 57 30, 41 44 C 33 51, 25 55, 19 57 C 24 46, 29 36, 36 25 C 41 17, 46 9, 51 4 Z' fill='%23d9b98a' stroke='%23a4682f' stroke-width='2'/%3E%3Cpath d='M51 4 C 43 15, 33 32, 20 55 M20 55 L15 62' fill='none' stroke='%23a4682f' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <script>
 (function(){var t=localStorage.getItem("soafaii_theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();
 (function(){var m={"calibri":"var(--font-calibri)","georgia":"var(--font-georgia)","systeme":"var(--font-systeme)"};
@@ -122,7 +122,19 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
 </head>
 <body>
 <header id="app-header">
-  <h1>Plume <svg class="logo-feather" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg></h1>
+  <h1>Plume <svg class="logo-feather" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="plumeGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="currentColor" stop-opacity=".08"/>
+        <stop offset=".55" stop-color="currentColor" stop-opacity=".28"/>
+        <stop offset="1" stop-color="currentColor" stop-opacity=".55"/>
+      </linearGradient>
+    </defs>
+    <path d="M51 4 C 60 14, 57 30, 41 44 C 33 51, 25 55, 19 57 C 24 46, 29 36, 36 25 C 41 17, 46 9, 51 4 Z" fill="url(#plumeGrad)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M51 4 C 43 15, 33 32, 20 55" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M46 12 C 49 13, 52 13, 54 12 M42 18 C 46 20, 50 20, 53 18 M38 24 C 42 27, 47 27, 51 25 M34 30 C 38 33, 43 34, 47 32 M30 36 C 34 39, 39 40, 43 39 M26 42 C 30 45, 34 46, 38 45 M23 48 C 26 50, 29 51, 32 50" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".7"/>
+    <path d="M20 55 L15 62 M20 55 L17.4 58.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg></h1>
   <nav id="main-nav">
     <button data-nav="home" id="nav-home">Accueil</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
@@ -218,13 +230,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.6.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.7.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.6.0";
+var PLUME_VERSION = "0.7.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -316,6 +328,32 @@ function api(path,opts){
 function defaultState(){
   return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[]},chat:[],reviews:[],mocks:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
+}
+var persistTimer=null;
+function schedulePersist(){
+  if(persistTimer)clearTimeout(persistTimer);
+  persistTimer=setTimeout(persistProgress,4000);
+}
+function cleanCopy(o,drop){
+  if(!o)return null;
+  var c={};for(var k in o){if(drop.indexOf(k)>=0)continue;c[k]=o[k];}
+  return c;
+}
+function persistProgress(){
+  if(!S)return;
+  S.inProgress={
+    E:(typeof E!=="undefined"&&E&&E.step>0&&E.step<6)?cleanCopy(E,["timer"]):null,
+    SS:(typeof SS!=="undefined"&&SS&&SS.step>0&&SS.step<6)?cleanCopy(SS,[]):null,
+    MK:(typeof MK!=="undefined"&&MK&&MK.phase&&MK.phase!=="results")?cleanCopy(MK,[]):null,
+    at:Date.now()
+  };
+  saveState();
+}
+function restoreProgress(){
+  if(!S||!S.inProgress)return;
+  if(S.inProgress.E)E=S.inProgress.E;
+  if(S.inProgress.SS)SS=S.inProgress.SS;
+  if(S.inProgress.MK)MK=S.inProgress.MK;
 }
 function saveState(){
   return api("/api/state",{method:"PUT",body:{state:S}}).catch(function(e){toast("Sauvegarde échouée : "+e.message,true);});
@@ -449,6 +487,7 @@ function boot(){
   return api("/api/state",{method:"GET"}).then(function(d){
     S=d.state||defaultState();
     if(!S.version)S=defaultState();
+    restoreProgress();
     PlumeHealth.check();
     show("home");
   }).catch(function(e){
@@ -535,6 +574,7 @@ function runTimer(elId){
   },1000);
 }
 function renderEntrance(){
+  schedulePersist();
   eSteps();var b=$("entrance-body"),h="";
   if(E.step===0){
     h='<p>Cet examen sert à mesurer ton niveau réel à l’écrit et à construire ton programme personnalisé. '
@@ -594,11 +634,11 @@ function wireEntrance(){
   if(E.step===2&&E.deadline)runTimer("e-timer2");
   var n0=$("e-next0");if(n0)n0.addEventListener("click",function(){
     S.profile.accent=$("e-accent").value;E.step=1;renderEntrance();startTimer(10,"e-timer1");});
-  var p1=$("e-prod1");if(p1){p1.addEventListener("input",function(){E.prod1=this.value;wc("e-wc1",this.value,60,120);});wc("e-wc1",E.prod1,60,120);}
+  var p1=$("e-prod1");if(p1){p1.addEventListener("input",function(){E.prod1=this.value;wc("e-wc1",this.value,60,120);schedulePersist();});wc("e-wc1",E.prod1,60,120);}
   var n1=$("e-next1");if(n1)n1.addEventListener("click",function(){
     if(wordsOf(E.prod1)<30){toast("Écris au moins 30 mots avant de continuer.");return;}
     stopTimer();E.step=2;renderEntrance();startTimer(15,"e-timer2");});
-  var p2=$("e-prod2");if(p2){p2.addEventListener("input",function(){E.prod2=this.value;wc("e-wc2",this.value,100,150);});wc("e-wc2",E.prod2,100,150);}
+  var p2=$("e-prod2");if(p2){p2.addEventListener("input",function(){E.prod2=this.value;wc("e-wc2",this.value,100,150);schedulePersist();});wc("e-wc2",E.prod2,100,150);}
   var n2=$("e-next2");if(n2)n2.addEventListener("click",function(){
     if(wordsOf(E.prod2)<50){toast("Écris au moins 50 mots avant de continuer.");return;}
     stopTimer();E.step=3;renderEntrance();});
@@ -606,7 +646,7 @@ function wireEntrance(){
     btn.addEventListener("click",function(){speak(DICTEE[Number(this.getAttribute("data-i"))].t,S.profile.accent);});
   });
   document.querySelectorAll(".e-dictee-input").forEach(function(inp,i){
-    inp.addEventListener("input",function(){E.dictee[i]=this.value;});
+    inp.addEventListener("input",function(){E.dictee[i]=this.value;schedulePersist();});
   });
   var n3=$("e-next3");if(n3)n3.addEventListener("click",function(){
     if(E.dictee.filter(function(d){return d.trim().length>0;}).length<DICTEE.length){toast("Écris les six phrases de la dictée.");return;}
@@ -757,6 +797,7 @@ function suggestedSujets(){
   return pool.slice(0,4);
 }
 function renderSession(){
+  schedulePersist();
   sSteps();var b=$("session-body"),h="";
   if(SS.step===0){
     h='<p class="muted">Choisis le sujet du jour. Les formats suivent les épreuves réelles du TEF et du TCF Canada.</p>';
@@ -809,7 +850,7 @@ function wireSession(){
     });
   });
   var st=$("s-text");
-  if(st){st.addEventListener("input",function(){SS.text=this.value;wc("s-wc",this.value,SS.sujet.min,SS.sujet.max);});wc("s-wc",SS.text,SS.sujet.min,SS.sujet.max);}
+  if(st){st.addEventListener("input",function(){SS.text=this.value;wc("s-wc",this.value,SS.sujet.min,SS.sujet.max);schedulePersist();});wc("s-wc",SS.text,SS.sujet.min,SS.sujet.max);}
   var dw=$("s-done-writing");if(dw)dw.addEventListener("click",function(){
     if(wordsOf(SS.text)<Math.min(40,SS.sujet.min*0.6)){toast("Ton texte est encore trop court pour être analysé.");return;}
     stopSessionTimer();
@@ -1313,6 +1354,7 @@ var MOCKSETS={
 };
 var MK=null;
 function renderMock(){
+  schedulePersist();
   var b=$("mock-body");
   if(!S.entrance.done){b.innerHTML='<p class="muted">Fais d’abord l’examen d’entrée.</p>';return;}
   if(!MK){
@@ -1352,7 +1394,7 @@ function renderMock(){
     b.innerHTML=h2;
     document.querySelectorAll(".mk-ta").forEach(function(ta){
       var i=Number(ta.getAttribute("data-i"));
-      ta.addEventListener("input",function(){MK.answers[i]=this.value;wc("mk-wc-"+i,this.value,MK.set.tasks[i].min,MK.set.tasks[i].max);});
+      ta.addEventListener("input",function(){MK.answers[i]=this.value;wc("mk-wc-"+i,this.value,MK.set.tasks[i].min,MK.set.tasks[i].max);schedulePersist();});
       wc("mk-wc-"+i,MK.answers[i],MK.set.tasks[i].min,MK.set.tasks[i].max);
     });
     $("mk-submit").addEventListener("click",submitMock);
@@ -1694,6 +1736,20 @@ function sendChat(){
 
 /* ---------- démarrage ---------- */
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){};window.speechSynthesis.getVoices();}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState!=="visible"||!S||!localStorage.getItem(TOKEN_KEY))return;
+  var busy=(E&&E.step>0&&E.step<6)||(SS&&SS.step>0&&SS.step<6)||(MK&&MK.phase&&MK.phase!=="results");
+  if(busy)return;
+  api("/api/state",{method:"GET"}).then(function(d){
+    if(!d.state)return;
+    S=d.state;restoreProgress();
+    var active=document.querySelector(".view.active");
+    if(!active)return;
+    if(active.id==="v-home")renderHome();
+    else if(active.id==="v-dash")renderDash();
+    else if(active.id==="v-review")renderReview();
+  }).catch(function(e){});
+});
 if(localStorage.getItem(TOKEN_KEY)){boot();}else{show("login");}
 PlumeHealth.check();
 </script>
