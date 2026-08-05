@@ -6,6 +6,12 @@
 <title>Plume — Entraîneur d'écriture</title>
 <script>
 (function(){var t=localStorage.getItem("soafaii_theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();
+(function(){var m={"calibri":"var(--font-calibri)","georgia":"var(--font-georgia)","systeme":"var(--font-systeme)"};
+var ui=localStorage.getItem("plume_font_ui")||"calibri";
+var ed=localStorage.getItem("plume_font_editor")||"calibri";
+var r=document.documentElement;
+r.style.setProperty("--font-ui",m[ui]||m.calibri);
+r.style.setProperty("--font-editor",m[ed]||m.calibri);})();
 </script>
 <style>
 :root, :root[data-theme="dark"]{
@@ -32,8 +38,12 @@
   --mark:#f5e3b8; --mark-border:#b07f35;
   --health-ok:#2ecc71; --health-warn:#f1c40f; --health-err:#e74c3c;
 }
+:root{--font-calibri:Calibri,"Carlito","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;
+--font-georgia:Georgia,"Times New Roman",serif;
+--font-systeme:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+--font-ui:var(--font-calibri);--font-editor:var(--font-calibri);}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:Georgia,"Times New Roman",serif;line-height:1.55;min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);line-height:1.55;min-height:100vh;}
 button,input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text);}
 header{display:flex;align-items:center;gap:1rem;padding:.7rem 1.2rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
 header h1{font-size:1.3rem;letter-spacing:.5px;}
@@ -60,7 +70,7 @@ main{max-width:880px;margin:0 auto;padding:1.4rem 1.2rem 4rem;}
 .btn.small{padding:.3rem .7rem;font-size:.88rem;}
 .row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
 .right{justify-content:flex-end;}
-textarea.writing{width:100%;min-height:260px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.05rem;line-height:1.7;resize:vertical;}
+textarea.writing{width:100%;min-height:260px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.05rem;line-height:1.7;resize:vertical;font-family:var(--font-editor);}
 textarea.writing:focus{outline:2px solid var(--accent);}
 input[type=text],input[type=password],input[type=date]{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;width:100%;}
 select{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:.4rem .6rem;}
@@ -72,7 +82,7 @@ select{background:var(--panel2);border:1px solid var(--border);border-radius:8px
 .progress-steps span{padding:.2rem .6rem;border-radius:20px;border:1px solid var(--border);color:var(--text2);font-size:.82rem;}
 .progress-steps span.done{border-color:var(--ok);color:var(--ok);}
 .progress-steps span.now{background:var(--panel);color:var(--text);border-color:var(--accent);}
-.sentence-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.15rem;line-height:1.9;margin:.6rem 0;}
+.sentence-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:1.15rem;line-height:1.9;margin:.6rem 0;font-family:var(--font-editor);}
 .sentence-box.big{font-size:1.45rem;}
 .tok{cursor:pointer;padding:0 2px;border-radius:4px;}
 .tok:hover{background:var(--panel);outline:1px solid var(--border);}
@@ -207,13 +217,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.4.1 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.5.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.4.1";
+var PLUME_VERSION = "0.5.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -329,13 +339,46 @@ function pickVoice(accent){
   var anyFr=vs.filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("fr")===0;});
   return anyFr.length?anyFr[0]:null;
 }
+var ttsCache={};
+var ttsServerDown=false;
+var ttsAudioEl=null;
 function speak(text,accent){
+  accent=accent||S.profile.accent||"fr-CA";
+  if(!ttsServerDown){
+    var key=accent+"|"+text;
+    if(ttsCache[key]){playTtsUrl(ttsCache[key]);return;}
+    fetch("/api/tts",{method:"POST",
+      headers:{"content-type":"application/json","x-plume-auth":localStorage.getItem(TOKEN_KEY)||""},
+      body:JSON.stringify({text:text,accent:accent})
+    }).then(function(r){
+      if(!r.ok)return r.json().then(function(d){throw new Error(d&&d.error?d.error:("TTS "+r.status));});
+      return r.blob();
+    }).then(function(blob){
+      var url=URL.createObjectURL(blob);
+      ttsCache[key]=url;playTtsUrl(url);
+    }).catch(function(e){
+      ttsServerDown=true;
+      toast("Voix serveur indisponible ("+e.message+") — voix du navigateur utilisée.",true);
+      speakBrowser(text,accent);
+    });
+    return;
+  }
+  speakBrowser(text,accent);
+}
+function playTtsUrl(url){
+  try{
+    if(ttsAudioEl){ttsAudioEl.pause();}
+    ttsAudioEl=new Audio(url);
+    ttsAudioEl.play().catch(function(e){toast("Lecture audio bloquée : "+e.message,true);});
+  }catch(e){toast("Lecture audio impossible : "+e.message,true);}
+}
+function speakBrowser(text,accent){
   if(!window.speechSynthesis){toast("Synthèse vocale non disponible dans ce navigateur.",true);return;}
   try{
     window.speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(text);
-    var v=pickVoice(accent||S.profile.accent||"fr-CA");
-    if(v){u.voice=v;u.lang=v.lang;}else{u.lang=accent||"fr-CA";}
+    var v=pickVoice(accent);
+    if(v){u.voice=v;u.lang=v.lang;}else{u.lang=accent;}
     u.rate=0.88;
     window.speechSynthesis.speak(u);
   }catch(e){toast("Lecture audio impossible : "+e.message,true);}
@@ -1111,12 +1154,28 @@ function renderSettings(){
     +'<option value="fr-FR"'+(S.profile.accent==="fr-FR"?" selected":"")+'>Français de France (fr-FR)</option></select>'
     +'<button class="btn ghost small" id="set-test-voice">Tester la voix</button></div>'
     +'<h3>Affichage</h3>'
+    +'<div class="row"><label>Police de l\u2019interface :</label><select id="set-font-ui">'
+    +'<option value="calibri">Calibri</option><option value="georgia">Georgia (serif)</option><option value="systeme">Système</option></select></div>'
+    +'<div class="row" style="margin-top:.4rem;"><label>Police de l\u2019éditeur d\u2019écriture :</label><select id="set-font-editor">'
+    +'<option value="calibri">Calibri</option><option value="georgia">Georgia (serif)</option><option value="systeme">Système</option></select></div>'
+
     +'<div class="row"><label><input type="checkbox" id="set-bigfont"'+(S.profile.bigFont?" checked":"")+'> Police agrandie pendant l’auto-scan</label></div>'
     +'<h3>Données</h3>'
     +'<div class="row"><button class="btn ghost" id="set-save">Enregistrer les réglages</button>'
     +'<button class="btn ghost" id="set-logout">Se déconnecter</button></div>'
     +'<p class="muted" style="margin-top:1rem;">Plume v'+PLUME_VERSION+' — thème via le sélecteur en haut. Toutes les analyses IA passent par le serveur ; rien ne part de ton navigateur vers Anthropic.</p>';
   b.innerHTML=h;
+  var fontsMap={"calibri":"var(--font-calibri)","georgia":"var(--font-georgia)","systeme":"var(--font-systeme)"};
+  $("set-font-ui").value=localStorage.getItem("plume_font_ui")||"calibri";
+  $("set-font-editor").value=localStorage.getItem("plume_font_editor")||"calibri";
+  $("set-font-ui").addEventListener("change",function(){
+    localStorage.setItem("plume_font_ui",this.value);
+    document.documentElement.style.setProperty("--font-ui",fontsMap[this.value]);
+  });
+  $("set-font-editor").addEventListener("change",function(){
+    localStorage.setItem("plume_font_editor",this.value);
+    document.documentElement.style.setProperty("--font-editor",fontsMap[this.value]);
+  });
   $("set-save").addEventListener("click",function(){
     S.profile.examTarget=$("set-exam").value;
     S.profile.examDate=$("set-date").value;

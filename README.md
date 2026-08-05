@@ -16,6 +16,7 @@ Plume n'est pas un correcteur : c'est un **entraîneur de perception**. Il n'éc
 npm install
 npx wrangler secret put ANTHROPIC_API_KEY   # clé API Anthropic
 npx wrangler secret put PLUME_PASSWORD      # mot de passe d'accès à l'app
+npx wrangler secret put OPENAI_API_KEY      # optionnel : voix TTS de qualité (dictées)
 npx wrangler deploy
 ```
 

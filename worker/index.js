@@ -56,7 +56,14 @@ async function checkAuth(request, env) {
 }
 
 /** Appel Anthropic avec extraction JSON robuste. */
-async function callClaude(env, { model, system, user, maxTokens = 4000, temperature = 0.3 }) {
+async function callClaude(env, { model, system, user, maxTokens = 4000, effort }) {
+	const payload = {
+		model,
+		max_tokens: maxTokens,
+		system,
+		messages: [{ role: "user", content: user }],
+	};
+	if (effort) payload.output_config = { effort };
 	const res = await fetch(ANTHROPIC_URL, {
 		method: "POST",
 		headers: {
@@ -64,13 +71,7 @@ async function callClaude(env, { model, system, user, maxTokens = 4000, temperat
 			"x-api-key": env.ANTHROPIC_API_KEY,
 			"anthropic-version": "2023-06-01",
 		},
-		body: JSON.stringify({
-			model,
-			max_tokens: maxTokens,
-			temperature,
-			system,
-			messages: [{ role: "user", content: user }],
-		}),
+		body: JSON.stringify(payload),
 	});
 	if (!res.ok) {
 		const body = await res.text();
@@ -124,12 +125,11 @@ Règles strictes :
 Taxonomie :
 ${taxonomyPrompt}`;
 
-async function detectPass(env, text, temperature) {
+async function detectPass(env, text, variant) {
 	const out = await callClaude(env, {
 		model: MODEL_BASE,
 		system: DETECT_SYSTEM,
-		user: `Texte de l'apprenant :\n<<<\n${text}\n>>>\nListe les erreurs (JSON uniquement).`,
-		temperature,
+		user: `Texte de l'apprenant :\n<<<\n${text}\n>>>\n${variant}\nListe les erreurs (JSON uniquement).`,
 	});
 	const arr = extractJson(out);
 	return Array.isArray(arr) ? arr : [];
@@ -153,7 +153,6 @@ async function verifyEdits(env, text, edits) {
 		model: MODEL_CRITIC,
 		system: VERIFY_SYSTEM,
 		user: `Texte :\n<<<\n${text}\n>>>\nÉdits proposés :\n${list}\nVérifie chaque édit (JSON uniquement, ${edits.length} objets).`,
-		temperature: 0.1,
 		maxTokens: 6000,
 	});
 	const arr = extractJson(out);
@@ -162,8 +161,12 @@ async function verifyEdits(env, text, edits) {
 
 /** Pipeline complet : 3 passes de détection → vote majoritaire → vérification critique. */
 async function detectPipeline(env, text) {
-	const temps = [0.2, 0.5, 0.8];
-	const settled = await Promise.allSettled(temps.map((t) => detectPass(env, text, t)));
+	const variants = [
+		"Procède dans l'ordre du texte, phrase par phrase.",
+		"Analyse le texte de la dernière phrase vers la première.",
+		"Fais deux lectures : une pour les accords et terminaisons, une pour tout le reste, puis fusionne ta liste.",
+	];
+	const settled = await Promise.allSettled(variants.map((v) => detectPass(env, text, v)));
 	const passes = settled.filter((s) => s.status === "fulfilled").map((s) => s.value);
 	const failures = settled.filter((s) => s.status === "rejected").map((s) => String(s.reason).slice(0, 200));
 	if (passes.length === 0) {
@@ -243,8 +246,8 @@ ${text}
 >>>
 Évalue (JSON uniquement).`;
 	const settled = await Promise.allSettled([
-		callClaude(env, { model: MODEL_BASE, system: GRADE_SYSTEM, user, temperature: 0.2 }),
-		callClaude(env, { model: MODEL_CRITIC, system: GRADE_SYSTEM, user, temperature: 0.2 }),
+		callClaude(env, { model: MODEL_BASE, system: GRADE_SYSTEM, user }),
+		callClaude(env, { model: MODEL_CRITIC, system: GRADE_SYSTEM + "\n\nTu es le second examinateur : note de manière indépendante, sans indulgence.", user }),
 	]);
 	const grades = [];
 	for (const s of settled) {
@@ -325,7 +328,6 @@ async function chat(env, messages) {
 		model: MODEL_BASE,
 		system,
 		user: convo + "\nPlume :",
-		temperature: 0.6,
 		maxTokens: 800,
 	});
 	let reply = out.trim();
@@ -350,7 +352,6 @@ async function elevate(env, sentence) {
 		model: MODEL_BASE,
 		system: ELEVATE_SYSTEM,
 		user: `Phrase : ${sentence}\n(JSON uniquement)`,
-		temperature: 0.4,
 		maxTokens: 500,
 	});
 	return extractJson(out);
@@ -366,8 +367,8 @@ async function makeDictation(env, categories, count) {
 	const out = await callClaude(env, {
 		model: MODEL_BASE,
 		system: DICTATION_SYSTEM,
+		effort: "low",
 		user: `Catégories cibles : ${categories.join(", ")}. Génère ${count} phrases (JSON uniquement).`,
-		temperature: 0.7,
 		maxTokens: 1200,
 	});
 	const arr = extractJson(out);
@@ -387,7 +388,6 @@ async function makeReport(env, text, errors) {
 		model: MODEL_BASE,
 		system: REPORT_SYSTEM,
 		user: `Texte :\n<<<\n${text}\n>>>\nErreurs confirmées :\n${errList}\n(JSON uniquement)`,
-		temperature: 0.4,
 		maxTokens: 1200,
 	});
 	return extractJson(out);
@@ -404,10 +404,37 @@ async function explainMore(env, err) {
 		model: MODEL_BASE,
 		system: EXPLAIN_SYSTEM,
 		user: `Erreur : "${err.original}" → "${err.correction}". Catégorie : ${err.category}. Règle : ${err.rule || ""}. ${err.question ? "Question de l'apprenant : " + err.question : ""}\n(JSON uniquement)`,
-		temperature: 0.4,
 		maxTokens: 1200,
 	});
 	return extractJson(out);
+}
+
+async function ttsAudio(env, text, accent) {
+	if (typeof env.OPENAI_API_KEY !== "string" || env.OPENAI_API_KEY.length === 0) {
+		return null;
+	}
+	const instructions = accent === "fr-FR"
+		? "Parle en français de France, accent standard, diction claire et posée d'un professeur qui dicte, vitesse légèrement lente."
+		: "Parle en français québécois authentique, accent québécois naturel, diction claire d'un professeur qui dicte, vitesse légèrement lente.";
+	const res = await fetch("https://api.openai.com/v1/audio/speech", {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+			authorization: "Bearer " + env.OPENAI_API_KEY,
+		},
+		body: JSON.stringify({
+			model: "gpt-4o-mini-tts",
+			voice: "coral",
+			input: text,
+			instructions,
+			response_format: "mp3",
+		}),
+	});
+	if (!res.ok) {
+		const body = await res.text();
+		throw new Error(`TTS ${res.status}: ${body.slice(0, 200)}`);
+	}
+	return res.arrayBuffer();
 }
 
 export default {
@@ -435,7 +462,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.4.1",
+					version: "0.5.0",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
@@ -459,6 +486,18 @@ export default {
 				}
 				const result = await gradeText(env, body);
 				return json(result);
+			}
+
+			if (url.pathname === "/api/tts" && request.method === "POST") {
+				const body = await request.json();
+				if (!body.text || String(body.text).length > 600) {
+					return json({ error: "Texte de dictée manquant ou trop long." }, 400);
+				}
+				const audio = await ttsAudio(env, String(body.text), body.accent === "fr-FR" ? "fr-FR" : "fr-CA");
+				if (audio === null) {
+					return json({ error: "TTS serveur non configuré (wrangler secret put OPENAI_API_KEY)." }, 501);
+				}
+				return new Response(audio, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
 			}
 
 			if (url.pathname === "/api/dictation" && request.method === "POST") {
