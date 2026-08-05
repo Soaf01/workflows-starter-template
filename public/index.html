@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plume — Entraîneur d'écriture</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a4682f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z'/%3E%3Cline x1='16' y1='8' x2='2' y2='22'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15'/%3E%3C/svg%3E">
 <script>
 (function(){var t=localStorage.getItem("soafaii_theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();
 (function(){var m={"calibri":"var(--font-calibri)","georgia":"var(--font-georgia)","systeme":"var(--font-systeme)"};
@@ -47,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);line-heig
 button,input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text);}
 header{display:flex;align-items:center;gap:1rem;padding:.7rem 1.2rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
 header h1{font-size:1.3rem;letter-spacing:.5px;}
-header h1 span{color:var(--accent);}
+.logo-feather{color:var(--accent);vertical-align:-4px;}
 nav{display:flex;gap:.4rem;flex-wrap:wrap;}
 nav button{background:none;border:1px solid transparent;color:var(--text2);padding:.35rem .8rem;border-radius:8px;cursor:pointer;}
 nav button:hover{color:var(--text);}
@@ -121,7 +122,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
 </head>
 <body>
 <header id="app-header">
-  <h1>Plume <span>✒</span></h1>
+  <h1>Plume <svg class="logo-feather" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg></h1>
   <nav id="main-nav">
     <button data-nav="home" id="nav-home">Accueil</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
@@ -217,13 +218,13 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </div>
 
 </main>
-<footer>Plume v0.5.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
+<footer>Plume v0.6.0 — SoafAii Studio. L'IA ne corrige jamais à ta place d'emblée : elle t'apprend à voir.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.5.0";
+var PLUME_VERSION = "0.6.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -464,7 +465,8 @@ function renderHome(){
     h+='<p>Bienvenue ! Avant de commencer l’entraînement, Plume doit mesurer ton vrai niveau à l’écrit '
       +'avec un <b>examen d’entrée</b> (45 à 60 minutes, en une ou deux fois) : deux courtes productions, '
       +'une dictée (accent français ou québécois, à toi de choisir), une chasse à l’erreur et cinq questions de grammaire.</p>'
-      +'<div class="row" style="margin-top:1rem;"><button class="btn" id="start-entrance-btn">Commencer l’examen d’entrée</button></div>';
+      +'<div class="row" style="margin-top:1rem;"><button class="btn" id="start-entrance-btn">'+(E&&E.step>0&&E.step<6?"Reprendre l’examen d’entrée (en cours)":"Commencer l’examen d’entrée")+'</button>'
+      +'<button class="btn ghost" id="demo-btn">Mode démo (pour tester l’app)</button></div>';
   }else{
     var last=S.sessions.length?S.sessions[S.sessions.length-1]:null;
     h+='<div class="statgrid">'
@@ -473,6 +475,7 @@ function renderHome(){
       +'<div class="stat"><b>'+(S.profile.cecrEcrit||"—")+'</b><span>niveau écrit estimé</span></div>'
       +'<div class="stat"><b>'+(S.profile.examTarget||"à décider")+'</b><span>examen visé</span></div>'
       +'</div>';
+    if(S.demo)h+='<p style="color:var(--warn);"><b>⚠ Données de démo chargées</b> — Réglages → « Réinitialiser toutes les données » avant de donner l’app à son utilisateur final.</p>';
     var nDue=dueReviews().length;
     if(nDue>0)h+='<p style="margin-top:.6rem;">🔁 <b>'+nDue+'</b> item(s) à réviser aujourd\u2019hui — <button class="btn small" id="home-review-btn">Réviser maintenant</button></p>';
     if(last)h+='<p class="muted">Dernière session : '+esc(last.date)+' — '+last.errors100w+' fautes/100 mots, '
@@ -483,8 +486,11 @@ function renderHome(){
   }
   $("home-body").innerHTML=h;
   var b1=$("start-entrance-btn");if(b1)b1.addEventListener("click",startEntrance);
+  var bd=$("demo-btn");if(bd)bd.addEventListener("click",loadDemoData);
   var b2=$("start-session-btn");if(b2)b2.addEventListener("click",startSession);
-  var b3=$("redo-entrance-btn");if(b3)b3.addEventListener("click",startEntrance);
+  var b3=$("redo-entrance-btn");if(b3)b3.addEventListener("click",function(){
+    if(confirm("Refaire l'examen d'entrée depuis le début ?"))restartEntrance();
+  });
   var b4=$("home-review-btn");if(b4)b4.addEventListener("click",function(){show("review");});
 }
 
@@ -494,6 +500,10 @@ function renderHome(){
 var E=null;
 var E_STEPS=["Intro","Production 1","Production 2","Dictée","Chasse à l'erreur","Métalangage","Résultats"];
 function startEntrance(){
+  if(E&&E.step>0&&E.step<6){show("entrance");renderEntrance();return;}
+  restartEntrance();
+}
+function restartEntrance(){
   E={step:0,prod1:"",prod2:"",dictee:DICTEE.map(function(){return "";}),chasse:CHASSE.map(function(p){return p.tokens.map(function(){return false;});}),
      meta:META_MCQ.map(function(){return -1;}),timer:null,results:null};
   show("entrance");renderEntrance();
@@ -505,15 +515,23 @@ function eSteps(){
   }).join("");
 }
 function stopTimer(){if(E&&E.timer){clearInterval(E.timer);E.timer=null;}}
+function fmtLeft(ms){
+  var left=Math.max(0,Math.round(ms/1000));
+  var m=Math.floor(left/60),sec=left%60;
+  return (m<10?"0":"")+m+":"+(sec<10?"0":"")+sec;
+}
 function startTimer(minutes,elId){
+  E.deadline=Date.now()+minutes*60000;
+  runTimer(elId);
+}
+function runTimer(elId){
   stopTimer();
-  var left=minutes*60;
   E.timer=setInterval(function(){
-    left--;var el=$(elId);if(!el){stopTimer();return;}
-    var m=Math.floor(left/60),s=left%60;
-    el.textContent=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
-    el.className="timer"+(left<60?" low":"");
-    if(left<=0){stopTimer();el.textContent="00:00 — temps écoulé (tu peux terminer ta phrase)";}
+    var el=$(elId);if(!el||!E){stopTimer();return;}
+    var ms=E.deadline-Date.now();
+    el.textContent=fmtLeft(ms);
+    el.className="timer"+(ms<60000?" low":"");
+    if(ms<=0){stopTimer();el.textContent="00:00 — temps écoulé (tu peux terminer ta phrase)";}
   },1000);
 }
 function renderEntrance(){
@@ -572,6 +590,8 @@ function renderEntrance(){
   wireEntrance();
 }
 function wireEntrance(){
+  if(E.step===1&&E.deadline)runTimer("e-timer1");
+  if(E.step===2&&E.deadline)runTimer("e-timer2");
   var n0=$("e-next0");if(n0)n0.addEventListener("click",function(){
     S.profile.accent=$("e-accent").value;E.step=1;renderEntrance();startTimer(10,"e-timer1");});
   var p1=$("e-prod1");if(p1){p1.addEventListener("input",function(){E.prod1=this.value;wc("e-wc1",this.value,60,120);});wc("e-wc1",E.prod1,60,120);}
@@ -719,6 +739,7 @@ var S_STEPS=["Sujet","Écriture","Auto-scan","Échelle d'indices","Révision","C
 function startSession(){
   if(!S){toast("Connecte-toi d'abord.");return;}
   if(!S.entrance.done){toast("Commence par l'examen d'entrée.");show("home");return;}
+  if(SS&&SS.step>0&&SS.step<6){show("session");renderSession();return;}
   SS={step:0,sujet:null,text:"",sentences:[],suspects:[],detected:null,ladder:[],consols:[],consolIdx:0,scanIdx:0,elevation:null};
   show("session");renderSession();
 }
@@ -779,6 +800,7 @@ function renderSession(){
 }
 function isSuspect(si,wi){return SS.suspects.some(function(s){return s.si===si&&s.wi===wi;});}
 function wireSession(){
+  if(SS.step===1&&SS.deadline)runSessionTimer();
   document.querySelectorAll(".s-choose").forEach(function(btn){
     btn.addEventListener("click",function(){
       var id=this.getAttribute("data-id");
@@ -842,14 +864,17 @@ function wireSession(){
 }
 var sessTimer=null;
 function startSessionTimer(){
+  SS.deadline=Date.now()+SS.sujet.minutes*60000;
+  runSessionTimer();
+}
+function runSessionTimer(){
   stopSessionTimer();
-  var left=SS.sujet.minutes*60;
   sessTimer=setInterval(function(){
-    left--;var el=$("s-timer");if(!el){stopSessionTimer();return;}
-    var m=Math.floor(left/60),s=left%60;
-    el.textContent=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
-    el.className="timer"+(left<60?" low":"");
-    if(left<=0){stopSessionTimer();el.textContent="00:00 — termine ta phrase et clique « J'ai terminé »";}
+    var el=$("s-timer");if(!el||!SS){stopSessionTimer();return;}
+    var ms=SS.deadline-Date.now();
+    el.textContent=fmtLeft(ms);
+    el.className="timer"+(ms<60000?" low":"");
+    if(ms<=0){stopSessionTimer();el.textContent="00:00 — termine ta phrase et clique « J'ai terminé »";}
   },1000);
 }
 function stopSessionTimer(){if(sessTimer){clearInterval(sessTimer);sessTimer=null;}}
@@ -1163,6 +1188,8 @@ function renderSettings(){
     +'<h3>Données</h3>'
     +'<div class="row"><button class="btn ghost" id="set-save">Enregistrer les réglages</button>'
     +'<button class="btn ghost" id="set-logout">Se déconnecter</button></div>'
+    +'<div class="row" style="margin-top:.6rem;"><button class="btn ghost small" id="set-demo">Charger les données de démo</button>'
+    +'<button class="btn ghost small" id="set-reset" style="color:var(--danger);">Réinitialiser toutes les données</button></div>'
     +'<p class="muted" style="margin-top:1rem;">Plume v'+PLUME_VERSION+' — thème via le sélecteur en haut. Toutes les analyses IA passent par le serveur ; rien ne part de ton navigateur vers Anthropic.</p>';
   b.innerHTML=h;
   var fontsMap={"calibri":"var(--font-calibri)","georgia":"var(--font-georgia)","systeme":"var(--font-systeme)"};
@@ -1185,6 +1212,13 @@ function renderSettings(){
   });
   $("set-test-voice").addEventListener("click",function(){
     speak("Bonjour ! Voici la voix choisie pour tes dictées.",$("set-accent").value);
+  });
+  $("set-demo").addEventListener("click",function(){
+    if(confirm("Remplacer l'état actuel par des données de démo ?"))loadDemoData();
+  });
+  $("set-reset").addEventListener("click",function(){
+    if(confirm("Effacer TOUTES les données (profil, corpus, sessions, examens blancs) ? Irréversible."))
+      {S=defaultState();saveState();toast("Données réinitialisées.");show("home");}
   });
   $("set-logout").addEventListener("click",function(){
     localStorage.removeItem(TOKEN_KEY);S=null;show("login");
@@ -1322,6 +1356,7 @@ function renderMock(){
       wc("mk-wc-"+i,MK.answers[i],MK.set.tasks[i].min,MK.set.tasks[i].max);
     });
     $("mk-submit").addEventListener("click",submitMock);
+    if(MK.deadline)runMockTimer();
     return;
   }
   if(MK.phase==="grading"){
@@ -1344,14 +1379,17 @@ function startMock(exam){
 }
 var mkTimer=null;
 function startMockTimer(){
+  MK.deadline=Date.now()+60*60000;
+  runMockTimer();
+}
+function runMockTimer(){
   if(mkTimer)clearInterval(mkTimer);
-  var left=60*60;
   mkTimer=setInterval(function(){
-    left--;var el=$("mk-timer");if(!el){clearInterval(mkTimer);mkTimer=null;return;}
-    var m=Math.floor(left/60),s2=left%60;
-    el.textContent=(m<10?"0":"")+m+":"+(s2<10?"0":"")+s2;
-    el.className="timer"+(left<300?" low":"");
-    if(left<=0){clearInterval(mkTimer);mkTimer=null;el.textContent="00:00 — rends ta copie";}
+    var el=$("mk-timer");if(!el||!MK){clearInterval(mkTimer);mkTimer=null;return;}
+    var ms=MK.deadline-Date.now();
+    el.textContent=fmtLeft(ms);
+    el.className="timer"+(ms<300000?" low":"");
+    if(ms<=0){clearInterval(mkTimer);mkTimer=null;el.textContent="00:00 — rends ta copie";}
   },1000);
 }
 function submitMock(){
@@ -1431,6 +1469,46 @@ function routerRecommendation(){
     msg="Tu performes mieux au format TEF (NCLC "+aTef+" vs "+aTcf+" au TCF) : <b>vise le TEF Canada</b>.";
   }
   return msg+" (Basé sur "+(tef.length+tcf.length)+" examen·s blanc·s ; refais-en pour affiner.)";
+}
+
+/* =========================================================
+   MODE DÉMO (test de l'app — à réinitialiser avant remise)
+========================================================= */
+function daysAgo(n){return new Date(Date.now()-n*86400000).toISOString().slice(0,10);}
+function loadDemoData(){
+  S=defaultState();
+  S.demo=true;
+  S.profile.cecrEcrit="B1";S.profile.nclc=5.5;S.profile.accent="fr-CA";
+  S.entrance={done:true,results:{date:daysAgo(6),e100:7.2,cecr:"B1",meta:3,chasseRate:0.5,
+    counts:{"E-VERB":6,"PP-AVOIR":5,"HOM-GRAM":4,"ACC-GN":3,"ACC-SV":2,"REGISTRE":2},nclc:5.5,tef450:248,tcf20:8.5}};
+  S.categories={
+    "E-VERB":{errors:6,selfDetected:1,resolved:3,lastSeen:daysAgo(1)},
+    "PP-AVOIR":{errors:5,selfDetected:1,resolved:2,lastSeen:daysAgo(2)},
+    "HOM-GRAM":{errors:4,selfDetected:2,resolved:2,lastSeen:daysAgo(1)},
+    "ACC-GN":{errors:3,selfDetected:1,resolved:2,lastSeen:daysAgo(3)},
+    "ACC-SV":{errors:2,selfDetected:1,resolved:1,lastSeen:daysAgo(4)},
+    "REGISTRE":{errors:2,selfDetected:0,resolved:1,lastSeen:daysAgo(2)}
+  };
+  S.curriculum=["E-VERB","PP-AVOIR","HOM-GRAM","ACC-GN","ACC-SV","REGISTRE"];
+  S.sessions=[
+    {date:daysAgo(4),sujetId:"t1a",subject:"Invitation à Toronto",words:104,errors:9,selfFound:2,selfRate:0.22,errors100w:8.7,surrendered:2,revFixed:4,revTotal:9},
+    {date:daysAgo(2),sujetId:"v2",subject:"Hier, au passé",words:112,errors:7,selfFound:3,selfRate:0.43,errors100w:6.3,surrendered:1,revFixed:4,revTotal:7},
+    {date:daysAgo(1),sujetId:"t2a",subject:"Premier hiver canadien",words:138,errors:6,selfFound:3,selfRate:0.5,errors100w:4.3,surrendered:0,revFixed:5,revTotal:6}
+  ];
+  S.mocks=[
+    {date:daysAgo(3),exam:"TEF",nclc:5.8,nclcLow:4.8,tef450:262,tcf20:8.8},
+    {date:daysAgo(1),exam:"TCF",nclc:6.3,nclcLow:5.3,tef450:281,tcf20:9.6}
+  ];
+  S.reviews=[
+    {id:"demo-1",type:"fix",data:{text:"Les document que j'ai recu sont importants.",answer:"Les documents que j'ai reçus sont importants."},cat:"PP-AVOIR",idx:0,due:today(),reps:1,lapses:1},
+    {id:"demo-2",type:"fix",data:{text:"Elle a decider de rester à Toronto cet hiver.",answer:"Elle a décidé de rester à Toronto cet hiver."},cat:"E-VERB",idx:0,due:today(),reps:0,lapses:0},
+    {id:"demo-3",type:"dictee",data:{text:"Ils se sont installés à Toronto l'année dernière."},cat:"PP-ETRE",idx:0,due:today(),reps:0,lapses:0},
+    {id:"demo-4",type:"dictee",data:{text:"J'ai retrouvé les clés que tu avais perdues."},cat:"PP-AVOIR",idx:1,due:today(),reps:1,lapses:0}
+  ];
+  S.streak={last:today(),count:3};
+  saveState();
+  toast("Données de démo chargées ✔");
+  show("home");
 }
 
 /* =========================================================

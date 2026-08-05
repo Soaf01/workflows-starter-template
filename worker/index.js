@@ -414,8 +414,8 @@ async function ttsAudio(env, text, accent) {
 		return null;
 	}
 	const instructions = accent === "fr-FR"
-		? "Parle en français de France, accent standard, diction claire et posée d'un professeur qui dicte, vitesse légèrement lente."
-		: "Parle en français québécois authentique, accent québécois naturel, diction claire d'un professeur qui dicte, vitesse légèrement lente.";
+		? "Tu es un enseignant parisien qui fait une dictée. Accent du français de France, hexagonal standard, net et reconnaissable. Diction claire, débit légèrement lent, petite pause entre les groupes de mots."
+		: "Tu es une enseignante de Montréal qui fait une dictée. Accent QUÉBÉCOIS clairement marqué et authentique : voyelles typiques du Québec, affrication des t et d devant i et u (petit → petsit, dur → dzur), intonation montréalaise. Diction claire, débit légèrement lent, petite pause entre les groupes de mots.";
 	const res = await fetch("https://api.openai.com/v1/audio/speech", {
 		method: "POST",
 		headers: {
@@ -462,7 +462,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.5.0",
+					version: "0.6.0",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}
