@@ -137,10 +137,10 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   </svg></h1>
   <nav id="main-nav">
     <button data-nav="home" id="nav-home">Accueil</button>
+    <button data-nav="chat" id="nav-chat">Parler à Plume</button>
     <button data-nav="session" id="nav-session">Session du jour</button>
     <button data-nav="review" id="nav-review">Réviser</button>
     <button data-nav="mock" id="nav-mock">Examen blanc</button>
-    <button data-nav="chat" id="nav-chat">Parler à Plume</button>
     <button data-nav="dash" id="nav-dash">Tableau de bord</button>
     <button data-nav="settings" id="nav-settings">Réglages</button>
   </nav>
@@ -505,7 +505,11 @@ function renderHome(){
       +'avec un <b>examen d’entrée</b> (45 à 60 minutes, en une ou deux fois) : deux courtes productions, '
       +'une dictée (accent français ou québécois, à toi de choisir), une chasse à l’erreur et cinq questions de grammaire.</p>'
       +'<div class="row" style="margin-top:1rem;"><button class="btn" id="start-entrance-btn">'+(E&&E.step>0&&E.step<6?"Reprendre l’examen d’entrée (en cours)":"Commencer l’examen d’entrée")+'</button>'
-      +'<button class="btn ghost" id="demo-btn">Mode démo (pour tester l’app)</button></div>';
+      +'<button class="btn ghost" id="demo-btn">Mode démo (pour tester l’app)</button></div>'
+      +'<div class="ladder-item" style="margin-top:1rem;">💬 <b>Avant de commencer, viens te présenter.</b> '
+      +'Dis à Plume qui tu es, ton objectif, tes doutes — elle s’en souviendra et adaptera son accompagnement. '
+      +'Tu peux lui parler à tout moment, pour n’importe quelle question.'
+      +'<div class="row" style="margin-top:.6rem;"><button class="btn small" id="home-chat-btn">Parler à Plume</button></div></div>';
   }else{
     var last=S.sessions.length?S.sessions[S.sessions.length-1]:null;
     h+='<div class="statgrid">'
@@ -521,7 +525,9 @@ function renderHome(){
       +Math.round(last.selfRate*100)+' % auto-détectées.</p>';
     h+='<div class="row" style="margin-top:1rem;">'
       +'<button class="btn" id="start-session-btn">Démarrer la session du jour</button>'
-      +'<button class="btn ghost" id="redo-entrance-btn">Refaire l’examen d’entrée</button></div>';
+      +'<button class="btn ghost" id="redo-entrance-btn">Refaire l’examen d’entrée</button></div>'
+      +'<p class="muted" style="margin-top:.8rem;">💬 Une question, un doute, envie d’en parler ? '
+      +'<button class="btn small ghost" id="home-chat-btn">Parler à Plume</button></p>';
   }
   $("home-body").innerHTML=h;
   var b1=$("start-entrance-btn");if(b1)b1.addEventListener("click",startEntrance);
@@ -531,6 +537,7 @@ function renderHome(){
     if(confirm("Refaire l'examen d'entrée depuis le début ?"))restartEntrance();
   });
   var b4=$("home-review-btn");if(b4)b4.addEventListener("click",function(){show("review");});
+  var b5=$("home-chat-btn");if(b5)b5.addEventListener("click",function(){show("chat");});
 }
 
 /* =========================================================
