@@ -1,0 +1,28 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "plume-tcf",
+	"main": "worker/index.js",
+	"compatibility_date": "2025-10-08",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "PLUME_DO",
+				"class_name": "PlumeDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["PlumeDO"]
+		}
+	],
+	"upload_source_maps": true
+}
