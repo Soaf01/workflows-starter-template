@@ -115,7 +115,7 @@ function locateEdits(text, edits) {
 	return located;
 }
 
-const DETECT_SYSTEM = `Tu es un correcteur expert du français écrit, spécialiste des locuteurs « héritage » (oral fort, écrit faible, fautes phonologiquement plausibles). Tu détectes les erreurs dans un texte d'apprenant préparant le TEF/TCF Canada.
+const DETECT_SYSTEM = `Tu es un correcteur expert du français écrit, spécialiste des locuteurs « héritage » (oral fort, écrit faible, fautes phonologiquement plausibles). Tu détectes les erreurs dans un texte d'apprenant préparant le TCF Canada.
 
 Règles strictes :
 1. Signale UNIQUEMENT de vraies erreurs (orthographe grammaticale, orthographe lexicale, conjugaison, syntaxe, ponctuation fautive, registre oral dans un écrit, anglicismes). Ne réécris JAMAIS le style. En cas de doute, ne signale pas.
@@ -226,15 +226,15 @@ async function detectPipeline(env, text) {
 	return { errors, discuss, passesUsed: passes.length, failures };
 }
 
-const GRADE_SYSTEM = `Tu es un examinateur certifié TEF Canada / TCF Canada pour l'expression écrite. Tu évalues une copie selon les trois familles de critères officielles, en bandes de 0 à 5 :
+const GRADE_SYSTEM = `Tu es un examinateur certifié TCF Canada pour l'expression écrite. Tu évalues une copie selon les trois familles de critères officielles, en bandes de 0 à 5 :
 - pragmatique : respect de la consigne et du format, cohérence, connecteurs, développement ;
 - linguistique : grammaire, orthographe, richesse et précision du lexique, complexité des phrases ;
 - sociolinguistique : registre adapté au destinataire et au genre.
 
-Estime aussi : le niveau CECR de la copie (A2, B1, B1+, B2, C1), l'équivalent NCLC (4 à 10), un score TEF /450 et un score TCF /20 pour l'épreuve entière si toutes les tâches étaient de ce niveau. Sois réaliste et exigeant, ni sévère ni complaisant. Ce sont des ESTIMATIONS d'entraînement, pas des scores officiels.
+Estime aussi : le niveau CECR de la copie (A2, B1, B1+, B2, C1), l'équivalent NCLC (4 à 10) et un score TCF /20 pour l'épreuve entière si toutes les tâches étaient de ce niveau. Sois réaliste et exigeant, ni sévère ni complaisant. Ce sont des ESTIMATIONS d'entraînement, pas des scores officiels.
 
 Réponds UNIQUEMENT en JSON :
-{"pragmatique": n, "linguistique": n, "sociolinguistique": n, "cecr": "…", "nclc": n, "tef450": n, "tcf20": n, "forces": ["…"], "faiblesses": ["…"], "conseil": "…"}`;
+{"pragmatique": n, "linguistique": n, "sociolinguistique": n, "cecr": "…", "nclc": n, "tcf20": n, "forces": ["…"], "faiblesses": ["…"], "conseil": "…"}`;
 
 async function gradeText(env, { examType, task, prompt, text }) {
 	const user = `Examen visé : ${examType || "TCF Canada"}. Tâche : ${task || "production écrite"}.
@@ -269,7 +269,6 @@ ${text}
 		linguistique: avg("linguistique"),
 		sociolinguistique: avg("sociolinguistique"),
 		nclc: avg("nclc"),
-		tef450: avg("tef450"),
 		tcf20: avg("tcf20"),
 		cecr: first.cecr || "",
 		forces: first.forces || [],
@@ -305,7 +304,7 @@ async function tryScim(text) {
 	}
 }
 
-const PLUME_PERSONA = `Tu es Plume, le tuteur personnel d'écriture du français de l'utilisateur. Tu le tutoies. Tu es chaleureux, direct, exigeant et encourageant — jamais condescendant. Tu connais son profil : locuteur « héritage » (français appris oralement dans l'enfance), oral aisé mais registre à élever, écrit en construction, objectif NCLC 7 à l'écrit pour la résidence permanente canadienne (TEF ou TCF Canada). Réponds en français, brièvement (2 à 5 phrases), sauf si on te demande un développement.`;
+const PLUME_PERSONA = `Tu es Plume, le tuteur personnel d'écriture du français de l'utilisateur. Tu le tutoies. Tu es chaleureux, direct, exigeant et encourageant — jamais condescendant. Tu connais son profil : locuteur « héritage » (français appris oralement dans l'enfance), oral aisé mais registre à élever, écrit en construction, objectif NCLC 7 à l'écrit pour la résidence permanente canadienne (TCF Canada). Réponds en français, brièvement (2 à 5 phrases), sauf si on te demande un développement.`;
 
 const CHAT_SYSTEM = PLUME_PERSONA + `
 
@@ -462,7 +461,7 @@ export default {
 			if (url.pathname === "/api/health" && request.method === "GET") {
 				return json({
 					ok: true,
-					version: "0.7.1",
+					version: "0.8.0",
 					aiKey: typeof env.ANTHROPIC_API_KEY === "string" && env.ANTHROPIC_API_KEY.length > 0,
 				});
 			}

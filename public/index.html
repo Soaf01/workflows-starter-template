@@ -158,7 +158,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
   <div class="view" id="v-login">
     <div class="card" style="max-width:420px;margin:3rem auto;">
       <h2>Bienvenue sur Plume</h2>
-      <p class="muted">Ton entraîneur personnel d'écriture du français, orienté TEF / TCF Canada.</p>
+      <p class="muted">Ton entraîneur personnel d'écriture du français, orienté TCF Canada.</p>
       <p style="margin:.8rem 0 .3rem;">Mot de passe</p>
       <input type="password" id="login-password" autocomplete="current-password">
       <p id="login-error" class="muted" style="color:var(--danger);margin-top:.4rem;"></p>
@@ -236,7 +236,7 @@ footer{text-align:center;color:var(--text2);font-size:.8rem;padding:1rem;}
 <script>
 "use strict";
 /* ================= Plume v0.1.0 ================= */
-var PLUME_VERSION = "0.7.1";
+var PLUME_VERSION = "0.8.0";
 var TOKEN_KEY = "plume_token";
 var S = null; // état global persisté
 
@@ -256,11 +256,8 @@ var SUJETS = [
   {id:"t2a",niv:2,fmt:"TCF tâche 2",titre:"Premier hiver canadien",min:120,max:150,minutes:15,prompt:"Pour un blog francophone, raconte ton premier hiver au Canada et explique ce que cette expérience t'a appris. (120 à 150 mots)"},
   {id:"t2b",niv:2,fmt:"TCF tâche 2",titre:"Malentendu culturel",min:120,max:150,minutes:15,prompt:"Un site francophone recueille des témoignages d'immigrants. Raconte un malentendu culturel que tu as vécu, puis donne ton avis sur ce qu'il révèle. (120 à 150 mots)"},
   {id:"t2c",niv:2,fmt:"TCF tâche 2",titre:"Une réussite récente",min:120,max:150,minutes:15,prompt:"Raconte une réussite récente dont tu es fier, puis explique pourquoi elle compte pour toi. (120 à 150 mots)"},
-  {id:"tefa",niv:2,fmt:"TEF section A",titre:"Fait divers : Queen Street",min:80,max:150,minutes:15,prompt:"Continue ce fait divers, au passé, sur un ton journalistique (sans donner ton opinion) : « Hier matin, un cycliste torontois a été témoin d'une scène inhabituelle sur Queen Street… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ? (80 mots minimum)"},
   {id:"t3a",niv:3,fmt:"TCF tâche 3",titre:"Le télétravail",min:120,max:180,minutes:20,prompt:"Document 1 : « Le télétravail améliore l'équilibre entre vie privée et travail, et réduit les déplacements inutiles. »\nDocument 2 : « Le télétravail isole les employés et affaiblit la culture d'entreprise. »\n1) Compare les deux points de vue sans donner ton avis (40 à 60 mots). 2) Donne ensuite ta position argumentée (80 à 120 mots)."},
-  {id:"t3b",niv:3,fmt:"TCF tâche 3",titre:"Le bilinguisme officiel",min:120,max:180,minutes:20,prompt:"Document 1 : « Le bilinguisme officiel du Canada est une richesse : il ouvre des portes et rapproche les communautés. »\nDocument 2 : « Le bilinguisme officiel coûte cher et reste théorique hors du Québec. »\n1) Compare les deux points de vue sans donner ton avis (40 à 60 mots). 2) Donne ensuite ta position argumentée (80 à 120 mots)."},
-  {id:"tefb1",niv:3,fmt:"TEF section B",titre:"Les réseaux sociaux",min:200,max:280,minutes:25,prompt:"Un journal affirme : « Les réseaux sociaux ont amélioré la communication entre les gens. » Écris au courrier des lecteurs pour donner ton opinion argumentée : introduction, deux ou trois arguments avec exemples, conclusion, formule de politesse. (200 mots minimum)"},
-  {id:"tefb2",niv:3,fmt:"TEF section B",titre:"La voiture en ville",min:200,max:280,minutes:25,prompt:"Un journal affirme : « La voiture n'a plus sa place en ville. » Écris au courrier des lecteurs pour donner ton opinion argumentée, avec une structure claire et un registre formel. (200 mots minimum)"}
+  {id:"t3b",niv:3,fmt:"TCF tâche 3",titre:"Le bilinguisme officiel",min:120,max:180,minutes:20,prompt:"Document 1 : « Le bilinguisme officiel du Canada est une richesse : il ouvre des portes et rapproche les communautés. »\nDocument 2 : « Le bilinguisme officiel coûte cher et reste théorique hors du Québec. »\n1) Compare les deux points de vue sans donner ton avis (40 à 60 mots). 2) Donne ensuite ta position argumentée (80 à 120 mots)."}
 ];
 
 var DICTEE = [
@@ -326,7 +323,7 @@ function api(path,opts){
 }
 
 function defaultState(){
-  return {version:PLUME_VERSION,profile:{examTarget:"",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[],dicteeSpeed:1,dicteeStreak:0,dicteeFails:0},chat:[],reviews:[],mocks:[],
+  return {version:PLUME_VERSION,profile:{examTarget:"TCF Canada",examDate:"",accent:"fr-CA",bigFont:false,cecrEcrit:"",nclc:null,notes:[],dicteeSpeed:1,dicteeStreak:0,dicteeFails:0},chat:[],reviews:[],mocks:[],
     entrance:{done:false,results:null},categories:{},sessions:[],texts:[],streak:{last:"",count:0},curriculum:[]};
 }
 var persistTimer=null;
@@ -755,7 +752,7 @@ function applyEntranceToState(){
   var r=E.results;
   S.entrance={done:true,results:{date:today(),e100:r.e100,cecr:r.cecr,meta:r.meta,
     chasseRate:r.chasse.total?r.chasse.found/r.chasse.total:0,counts:r.counts,
-    nclc:r.grade?r.grade.nclc:null,tef450:r.grade?r.grade.tef450:null,tcf20:r.grade?r.grade.tcf20:null}};
+    nclc:r.grade?r.grade.nclc:null,tcf20:r.grade?r.grade.tcf20:null}};
   S.profile.cecrEcrit=r.cecr;
   if(r.grade&&r.grade.nclc)S.profile.nclc=r.grade.nclc;
   Object.keys(r.counts).forEach(function(c){catStat(c).errors+=r.counts[c];catStat(c).lastSeen=today();});
@@ -776,7 +773,7 @@ function renderEntranceResults(){
   if(r.grade){
     h+='<p class="muted">Notation de la production 2 (double passe IA'+(r.grade.doubleMarked?"":" — une seule passe a abouti")+') : '
       +'pragmatique '+r.grade.pragmatique+'/5, linguistique '+r.grade.linguistique+'/5, sociolinguistique '+r.grade.sociolinguistique
-      +'/5 — estimation NCLC '+r.grade.nclc+' (TEF ~'+r.grade.tef450+'/450, TCF ~'+r.grade.tcf20+'/20). '
+      +'/5 — estimation NCLC '+r.grade.nclc+' (TCF ~'+r.grade.tcf20+'/20). '
       +'<i>Estimations d’entraînement, pas des scores officiels.</i></p>';
     if(r.grade.conseil)h+='<p class="muted">Conseil de l’examinateur : '+esc(r.grade.conseil)+'</p>';
   }
@@ -834,7 +831,7 @@ function renderSession(){
   schedulePersist();
   sSteps();var b=$("session-body"),h="";
   if(SS.step===0){
-    h='<p class="muted">Choisis le sujet du jour. Les formats suivent les épreuves réelles du TEF et du TCF Canada.</p>';
+    h='<p class="muted">Choisis le sujet du jour. Les formats suivent les épreuves réelles du TCF Canada.</p>';
     suggestedSujets().forEach(function(s){
       h+='<div class="ladder-item"><b>'+esc(s.titre)+'</b><span class="badge">'+esc(s.fmt)+'</span>'
         +'<span class="badge">'+s.min+'–'+s.max+' mots · '+s.minutes+' min</span>'
@@ -1213,8 +1210,6 @@ function renderDash(){
     h+='<h3>Préparation à l\u2019examen</h3>'
       +'<p>Tendance sur tes '+last3.length+' derniers examens blancs : <b>NCLC ~'+avgN+'</b> — objectif : <b>NCLC 7</b>.'
       +(avgN>=7?' Tu es dans la zone ✔ — consolide.':' Écart restant : '+(Math.round((7-avgN)*10)/10)+' niveau·x.')+'</p>';
-    var rec=routerRecommendation();
-    if(rec)h+='<p class="muted">'+rec+'</p>';
   }
   h+='<h3>Familles de fautes (curriculum en cours)</h3>';
   var cur=(S.curriculum||[]).slice(0,10);
@@ -1243,10 +1238,7 @@ function renderDash(){
 function renderSettings(){
   var b=$("settings-body");
   var h='<h3>Examen</h3>'
-    +'<div class="row"><label>Examen visé :</label><select id="set-exam">'
-    +'<option value=""'+(S.profile.examTarget===""?" selected":"")+'>À décider (le routeur t’aidera)</option>'
-    +'<option value="TCF Canada"'+(S.profile.examTarget==="TCF Canada"?" selected":"")+'>TCF Canada</option>'
-    +'<option value="TEF Canada"'+(S.profile.examTarget==="TEF Canada"?" selected":"")+'>TEF Canada</option></select></div>'
+    +'<p class="muted">Examen visé : <b>TCF Canada</b> — Plume est maintenant dédiée exclusivement au TCF.</p>'
     +'<div class="row" style="margin-top:.5rem;"><label>Date d’examen visée :</label><input type="date" id="set-date" value="'+esc(S.profile.examDate||"")+'" style="width:auto;"></div>'
     +'<h3>Dictées</h3>'
     +'<div class="row"><label>Accent :</label><select id="set-accent">'
@@ -1280,7 +1272,7 @@ function renderSettings(){
     document.documentElement.style.setProperty("--font-editor",fontsMap[this.value]);
   });
   $("set-save").addEventListener("click",function(){
-    S.profile.examTarget=$("set-exam").value;
+    S.profile.examTarget="TCF Canada";
     S.profile.examDate=$("set-date").value;
     S.profile.accent=$("set-accent").value;
     S.profile.bigFont=$("set-bigfont").checked;
@@ -1358,20 +1350,11 @@ function wordDiff(a,b){
 }
 
 /* =========================================================
-   EXAMEN BLANC (formats officiels, notation NCLC prudente, routeur)
+   EXAMEN BLANC (format officiel TCF Canada, notation NCLC prudente)
+   Note : les examens blancs TEF déjà faits restent affichés dans
+   l'historique (S.mocks) — seul le lancement de nouveaux TEF est retiré.
 ========================================================= */
 var MOCKSETS={
-  "TEF":[
-    {id:"tef1",tasks:[
-      {key:"A",label:"Section A — fait divers (80-120 mots)",min:80,max:120,w:0.35,
-       prompt:"Continue ce fait divers, au passé, sur un ton journalistique, sans donner ton opinion : « Hier soir, une panne d’électricité géante a plongé le centre-ville de Toronto dans le noir pendant deux heures… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ?"},
-      {key:"B",label:"Section B — lettre d’opinion (200 mots minimum)",min:200,max:300,w:0.65,
-       prompt:"Un journal affirme : « Le travail à distance devrait devenir la norme pour tous les emplois de bureau. » Écris au courrier des lecteurs pour donner ton opinion argumentée : introduction, deux ou trois arguments avec exemples, conclusion, formule de politesse."}]},
-    {id:"tef2",tasks:[
-      {key:"A",label:"Section A — fait divers (80-120 mots)",min:80,max:120,w:0.35,
-       prompt:"Continue ce fait divers, au passé, sur un ton journalistique : « Dimanche dernier, un chien perdu a parcouru douze kilomètres à travers la ville pour retrouver sa famille… » Réponds à : qui ? quoi ? où ? quand ? comment ? pourquoi ?"},
-      {key:"B",label:"Section B — lettre d’opinion (200 mots minimum)",min:200,max:300,w:0.65,
-       prompt:"Un journal affirme : « Les applications de traduction automatique rendent inutile l’apprentissage des langues. » Écris au courrier des lecteurs pour donner ton opinion argumentée, avec une structure claire et un registre formel."}]}],
   "TCF":[
     {id:"tcf1",tasks:[
       {key:"T1",label:"Tâche 1 — message (60-120 mots)",min:60,max:120,w:0.2,
@@ -1397,13 +1380,9 @@ function renderMock(){
     var h='<p class="muted">Conditions réelles : 60 minutes, toutes les tâches du format officiel, aucune aide. '
       +'À la fin, Plume note ta copie selon les trois familles de critères officielles et estime ton NCLC — '
       +'<b>estimation prudente</b> (les IA ont tendance à surestimer, la notation est donc calibrée basse).</p>';
-    var doneTef=(S.mocks||[]).filter(function(m){return m.exam==="TEF";}).length;
     var doneTcf=(S.mocks||[]).filter(function(m){return m.exam==="TCF";}).length;
     h+='<div class="row" style="margin-top:1rem;">'
-      +'<button class="btn mk-start" data-exam="TEF">Examen blanc TEF ('+doneTef+' fait·s)</button>'
       +'<button class="btn mk-start" data-exam="TCF">Examen blanc TCF ('+doneTcf+' fait·s)</button></div>';
-    var rec=routerRecommendation();
-    if(rec)h+='<div class="ladder-item" style="margin-top:1rem;"><b>Routeur TEF vs TCF :</b> '+rec+'</div>';
     if((S.mocks||[]).length){
       h+='<h3>Tes examens blancs</h3><table class="simple"><tr><th>Date</th><th>Examen</th><th>NCLC estimé (prudent)</th><th>Score estimé</th></tr>';
       S.mocks.slice(-6).reverse().forEach(function(m){
@@ -1498,9 +1477,9 @@ function submitMock(){
     }
     var nclc=wavg("nclc");
     MK.result={graded:graded,fails:fails,nclc:nclc,nclcLow:Math.max(4,Math.round((nclc-1)*10)/10),
-      tef450:Math.round(wavg("tef450")),tcf20:Math.round(wavg("tcf20")*10)/10};
+      tcf20:Math.round(wavg("tcf20")*10)/10};
     if(!S.mocks)S.mocks=[];
-    S.mocks.push({date:today(),exam:MK.exam,nclc:nclc,nclcLow:MK.result.nclcLow,tef450:MK.result.tef450,tcf20:MK.result.tcf20});
+    S.mocks.push({date:today(),exam:MK.exam,nclc:nclc,nclcLow:MK.result.nclcLow,tcf20:MK.result.tcf20});
     saveState();
     MK.phase="results";renderMock();
   });
@@ -1525,28 +1504,8 @@ function renderMockResults(){
     +'<p class="muted"><b>Pragmatique</b> : la tâche est-elle remplie (bon genre de texte, bon nombre de mots, toutes les consignes) ? Le texte est-il organisé en paragraphes avec des connecteurs ?<br>'
     +'<b>Linguistique</b> : les accords, conjugaisons et l’orthographe sont-ils corrects ? Le vocabulaire est-il précis, les phrases variées ?<br>'
     +'<b>Sociolinguistique</b> : le registre convient-il au destinataire (vouvoiement, formules de politesse, ton neutre du fait divers) ?</p>';
-  var rec=routerRecommendation();
-  if(rec)h+='<div class="ladder-item"><b>Routeur TEF vs TCF :</b> '+rec+'</div>';
   h+='<div class="row right" style="margin-top:1rem;"><button class="btn" id="mk-back">Retour</button></div>';
   return h;
-}
-function routerRecommendation(){
-  var tef=(S.mocks||[]).filter(function(m){return m.exam==="TEF";});
-  var tcf=(S.mocks||[]).filter(function(m){return m.exam==="TCF";});
-  if(!tef.length||!tcf.length)return null;
-  var avg=function(arr){return arr.reduce(function(a,m){return a+m.nclc;},0)/arr.length;};
-  var aTef=Math.round(avg(tef)*10)/10,aTcf=Math.round(avg(tcf)*10)/10;
-  var daysLeft=S.profile.examDate?Math.round((new Date(S.profile.examDate)-Date.now())/86400000):null;
-  var msg;
-  if(Math.abs(aTef-aTcf)<=0.3){
-    if(daysLeft!==null&&daysLeft<60)msg="Tes niveaux estimés sont équivalents (TEF "+aTef+" vs TCF "+aTcf+") et ton échéance est proche : <b>penche TEF</b> (résultats en 1-10 jours, repassage plus rapide).";
-    else msg="Tes niveaux estimés sont équivalents (TEF "+aTef+" vs TCF "+aTcf+") : <b>penche TCF</b> — tâches graduées, seuil NCLC 7 à 50 % de l’échelle, pas de fait divers.";
-  }else if(aTcf>aTef){
-    msg="Tu performes mieux au format TCF (NCLC "+aTcf+" vs "+aTef+" au TEF) : <b>vise le TCF Canada</b>.";
-  }else{
-    msg="Tu performes mieux au format TEF (NCLC "+aTef+" vs "+aTcf+" au TCF) : <b>vise le TEF Canada</b>.";
-  }
-  return msg+" (Basé sur "+(tef.length+tcf.length)+" examen·s blanc·s ; refais-en pour affiner.)";
 }
 
 /* =========================================================
