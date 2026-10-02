@@ -1,6 +1,7 @@
 import { generateResaleDraft, resaleDraftMock } from "./resale.js";
 import { loadState, saveState } from "./store.js";
 import { answerCallback, getUpdates, sendResaleDraft, sendText } from "./telegram.js";
+import { ackDecisions, fetchUnprocessedDecisions, postDraft, webappConfigured } from "./webapp.js";
 import type { Decision } from "./types.js";
 
 // Boucle humaine : lit les clics sur les boutons d'alerte, enregistre la
@@ -35,5 +36,36 @@ export async function processFeedback(dryRun: boolean): Promise<void> {
     delete state.pending[listingId];
   }
   saveState(state);
-  console.log(`[feedback] ${updates.length} update(s) traité(s).`);
+  console.log(`[feedback] Telegram : ${updates.length} update(s) traité(s).`);
+
+  await processWebappDecisions(dryRun);
+}
+
+// Décisions prises dans Pépites Manager : enregistrement local (calibration)
+// + génération du brouillon de revente s'il manque, reposté vers l'app.
+async function processWebappDecisions(dryRun: boolean): Promise<void> {
+  if (!webappConfigured()) return;
+  const state = loadState();
+  const items = await fetchUnprocessedDecisions();
+  const acked: string[] = [];
+  for (const it of items) {
+    if (it.status === "pending") continue;
+    state.decisions[it.id] = {
+      decision: it.status,
+      at: it.decidedAt ?? new Date().toISOString(),
+    };
+    if (it.status === "achete" && !it.draft) {
+      try {
+        const draft = dryRun ? resaleDraftMock(it.candidate) : await generateResaleDraft(it.candidate);
+        await postDraft(it.id, draft);
+      } catch (e) {
+        console.warn(`[webapp] brouillon ${it.id} : ${(e as Error).message}`);
+      }
+    }
+    delete state.pending[it.id];
+    acked.push(it.id);
+  }
+  await ackDecisions(acked);
+  saveState(state);
+  console.log(`[feedback] Webapp : ${acked.length} décision(s) traitée(s).`);
 }

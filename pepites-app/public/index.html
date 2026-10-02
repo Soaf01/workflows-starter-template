@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pépites Manager</title>
+<script>
+// Thème appliqué avant le premier paint (standard SoafAii).
+(function(){
+  try {
+    var t = localStorage.getItem("soafaii_theme");
+    if (t === "dark" || t === "earth" || t === "light") {
+      document.documentElement.setAttribute("data-theme", t);
+    }
+  } catch (e) { /* storage indisponible : thème par défaut */ }
+})();
+</script>
+<style>
+/* ---- Tokens (seuls endroits où les couleurs sont définies) ---- */
+:root[data-theme="dark"]{
+  --bg:#0f1115; --panel:#181b22; --panel2:#1f242e; --border:#2a3140;
+  --text:#e8eaf0; --muted:#9aa3b2; --accent:#d4a24e; --accent-ink:#1a1405;
+  --ok:#3fa66a; --warn:#d4a24e; --bad:#c75050; --link:#7ab0e0;
+}
+:root[data-theme="earth"]{
+  --bg:#211c14; --panel:#2b2419; --panel2:#352c1f; --border:#4a3e2c;
+  --text:#f0e9dc; --muted:#b3a68e; --accent:#c98f3d; --accent-ink:#1a1405;
+  --ok:#6a9e55; --warn:#c98f3d; --bad:#b85c4a; --link:#9ec0d8;
+}
+:root[data-theme="light"]{
+  --bg:#f4f2ee; --panel:#ffffff; --panel2:#f0ede6; --border:#d8d2c6;
+  --text:#23201a; --muted:#6d675c; --accent:#9a6b1f; --accent-ink:#ffffff;
+  --ok:#2e7d4f; --warn:#9a6b1f; --bad:#a83f3f; --link:#2a6496;
+}
+/* ---- Composants : tokens uniquement ---- */
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link)}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+header h1{font-size:18px;margin:0;color:var(--accent)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+nav button.active{background:var(--panel2);color:var(--text);border-color:var(--border)}
+.spacer{flex:1}
+.iconbtn{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+main{max-width:1080px;margin:0 auto;padding:20px}
+.view{display:none}
+.view.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat .n{font-size:26px;font-weight:600;color:var(--accent)}
+.stat .l{font-size:12px;color:var(--muted)}
+.item{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;display:grid;grid-template-columns:140px 1fr;gap:16px}
+.item img{width:140px;height:140px;object-fit:cover;border-radius:8px;background:var(--panel2)}
+.item h3{margin:0 0 6px;font-size:16px}
+.meta{font-size:13px;color:var(--muted);margin:2px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);background:var(--panel2);margin-right:6px}
+.badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)}
+.btnrow{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--border);background:var(--panel2);color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.btn.buy{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.btn.rej{color:var(--muted)}
+.btn.faux{color:var(--bad)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.empty{color:var(--muted);padding:30px;text-align:center}
+pre.draft{white-space:pre-wrap;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;font:13px/1.5 ui-monospace,monospace}
+footer{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:30px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+#gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
+#gate .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:30px;width:320px;text-align:center}
+#gate input{width:100%;padding:10px;margin:14px 0;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:15px}
+#gateErr{color:var(--bad);font-size:13px;min-height:18px}
+.settings dt{color:var(--muted);font-size:13px;margin-top:12px}
+.settings dd{margin:2px 0 0}
+.settings input{width:100%;max-width:480px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+@media (max-width:640px){ .item{grid-template-columns:1fr} .item img{width:100%;height:180px} }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="panel">
+    <h1 style="margin:0;color:var(--accent)">Pépites Manager</h1>
+    <p class="meta">Accès protégé</p>
+    <input id="gatePass" type="password" placeholder="Mot de passe" autocomplete="current-password">
+    <div id="gateErr"></div>
+    <button class="btn accent" id="gateBtn">Entrer</button>
+  </div>
+</div>
+
+<header>
+  <h1>Pépites Manager</h1>
+  <nav id="nav">
+    <button data-view="viewDash" class="active">Tableau de bord</button>
+    <button data-view="viewQueue">File d'attente</button>
+    <button data-view="viewDrafts">Brouillons</button>
+    <button data-view="viewHistory">Historique</button>
+    <button data-view="viewSettings">Réglages</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="themeBtn" title="Thème">◐ Thème</button>
+  <button class="iconbtn" id="logoutBtn" title="Déconnexion">Sortir</button>
+</header>
+
+<main>
+  <section id="viewDash" class="view active">
+    <div class="cards" id="statCards"></div>
+    <div id="dashNote" class="meta"></div>
+  </section>
+
+  <section id="viewQueue" class="view">
+    <div id="queueList"></div>
+  </section>
+
+  <section id="viewDrafts" class="view">
+    <div id="draftsList"></div>
+  </section>
+
+  <section id="viewHistory" class="view">
+    <div id="historyList"></div>
+  </section>
+
+  <section id="viewSettings" class="view">
+    <dl class="settings">
+      <dt>URL du proxy IA (génération des brouillons — jamais d'appel Anthropic direct depuis le navigateur)</dt>
+      <dd><input id="setProxy" placeholder="https://studio-brain.soaf01.workers.dev/ai"></dd>
+      <dt>Modèle (proxy)</dt>
+      <dd><input id="setModel" placeholder="claude-sonnet-4-20250514"></dd>
+      <dt></dt>
+      <dd><button class="btn accent" id="saveSettings">Enregistrer</button> <span id="setMsg" class="meta"></span></dd>
+      <dt>Moteur</dt>
+      <dd class="meta">Le moteur (pepites-engine) pousse les candidats vers cette app via POST /api/candidates (jeton moteur). Les décisions prises ici sont relues par <code>npm run feedback</code>.</dd>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  <span class="dot" id="healthDot"></span>
+  <span id="healthLabel">SoafAii Health — démarrage…</span>
+  <span class="spacer"></span>
+  <span>Pépites Manager v1</span>
+</footer>
+
+<script>
+"use strict";
+// ------------------------------------------------------------------
+// Pépites Manager — single-file, API même origine (/api/*), clé d'app
+// envoyée en x-app-key (vérifiée côté Worker). Tokens de thème SoafAii.
+// ------------------------------------------------------------------
+var THEMES = ["dark", "earth", "light"];
+var state = { key: null, items: [], health: { api: false, dom: false } };
+
+function $(id){ return document.getElementById(id); }
+
+function getSetting(name, fallback){
+  try { return localStorage.getItem("pepites_" + name) || fallback; }
+  catch(e){ return fallback; }
+}
+function setSetting(name, value){
+  try { localStorage.setItem("pepites_" + name, value); } catch(e){ /* ignore */ }
+}
+
+// ---- API -----------------------------------------------------------------
+async function api(path, options){
+  var opts = options || {};
+  opts.headers = Object.assign({ "x-app-key": state.key || "" }, opts.headers || {});
+  if (opts.body && typeof opts.body !== "string") {
+    opts.body = JSON.stringify(opts.body);
+    opts.headers["content-type"] = "application/json";
+  }
+  var res = await fetch("/api" + path, opts);
+  if (res.status === 401) { logout(); throw new Error("Clé refusée"); }
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+
+// ---- Porte d'accès -------------------------------------------------------
+async function tryLogin(){
+  var pass = $("gatePass").value;
+  if (!pass) return;
+  state.key = pass;
+  try {
+    await api("/stats");
+    try { sessionStorage.setItem("pepites_key", pass); } catch(e){ /* ignore */ }
+    $("gate").style.display = "none";
+    refreshAll();
+  } catch (e) {
+    state.key = null;
+    $("gateErr").textContent = "Accès refusé (" + e.message + ")";
+  }
+}
+function logout(){
+  state.key = null;
+  try { sessionStorage.removeItem("pepites_key"); } catch(e){ /* ignore */ }
+  $("gate").style.display = "flex";
+}
+
+// ---- Rendu ---------------------------------------------------------------
+function badgeFor(level){
+  if (level === "prouvee") return '<span class="badge ok">prouvée</span>';
+  if (level === "attribuee") return '<span class="badge warn">attribuée</span>';
+  return '<span class="badge">style de</span>';
+}
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+
+function itemCard(it, withButtons){
+  var c = it.candidate, i = c.identification, l = c.listing;
+  var comps = c.comps && c.comps.length
+    ? "Comps (médiane) : " + c.medianCompEur + " € sur " + c.comps.length + " ventes"
+    : "⚠️ Pas de comps — vérifier la cote à la main";
+  var html = '<div class="item" id="item-' + esc(it.id) + '">'
+    + '<img src="' + esc(l.imageUrls[0] || "") + '" alt="photo annonce" loading="lazy">'
+    + "<div><h3>" + esc(l.title) + "</h3>"
+    + '<div class="meta">' + badgeFor(i.attributionLevel) + esc(i.designersOrEditors.join(" / "))
+    + " — confiance " + Math.round(i.confidence * 100) + " %</div>"
+    + '<div class="meta">' + esc(i.summary) + "</div>"
+    + '<div class="meta">Prix demandé : <b>' + esc(l.priceEur) + " €</b> · " + esc(comps)
+    + " · Gain net estimé : <b>" + esc(c.estimatedNetGainEur) + " €</b></div>"
+    + '<div class="meta">À vérifier : ' + esc(i.detailsToVerify.join(" · ")) + "</div>"
+    + '<div class="meta">À demander : ' + esc(i.questionsForSeller.join(" · ")) + "</div>"
+    + '<div class="meta"><a href="' + esc(l.url) + '" target="_blank" rel="noopener">Voir l’annonce ↗</a> · ' + esc(l.location) + "</div>";
+  if (withButtons) {
+    html += '<div class="btnrow">'
+      + '<button class="btn buy" onclick="decide(\'' + esc(it.id) + '\',\'achete\')">✅ Acheté</button>'
+      + '<button class="btn rej" onclick="decide(\'' + esc(it.id) + '\',\'rejete\')">👀 Vu-rejeté</button>'
+      + '<button class="btn faux" onclick="decide(\'' + esc(it.id) + '\',\'faux\')">❌ Faux positif</button>'
+      + "</div>";
+  }
+  html += "</div></div>";
+  return html;
+}
+
+function renderQueue(){
+  var pending = state.items.filter(function(x){ return x.status === "pending"; });
+  $("queueList").innerHTML = pending.length
+    ? pending.map(function(x){ return itemCard(x, true); }).join("")
+    : '<div class="empty">Aucun candidat en attente. Le moteur alimente cette file à chaque passage.</div>';
+}
+
+function renderDrafts(){
+  var bought = state.items.filter(function(x){ return x.status === "achete"; });
+  if (!bought.length) {
+    $("draftsList").innerHTML = '<div class="empty">Aucun achat — les brouillons de revente apparaîtront ici après un clic « Acheté ».</div>';
+    return;
+  }
+  $("draftsList").innerHTML = bought.map(function(x){
+    var head = itemCard(x, false);
+    var body;
+    if (x.draft) {
+      body = '<pre class="draft" id="draft-' + esc(x.id) + '">'
+        + esc("【 " + x.draft.platform + " — " + x.draft.priceEur + " € 】\n\n" + x.draft.title + "\n\n" + x.draft.description)
+        + "</pre>"
+        + '<div class="btnrow"><button class="btn" onclick="copyDraft(\'' + esc(x.id) + '\')">📋 Copier</button>'
+        + '<button class="btn" onclick="genDraft(\'' + esc(x.id) + '\')">↻ Régénérer (IA)</button></div>';
+    } else {
+      body = '<div class="btnrow"><button class="btn accent" onclick="genDraft(\'' + esc(x.id) + '\')">✨ Générer le brouillon de revente (IA)</button></div>';
+    }
+    return head + body;
+  }).join("");
+}
+
+function renderHistory(){
+  var done = state.items.filter(function(x){ return x.status !== "pending"; });
+  $("historyList").innerHTML = done.length
+    ? done.map(function(x){
+        return '<div class="item"><img src="' + esc(x.candidate.listing.imageUrls[0] || "") + '" alt="">'
+          + "<div><h3>" + esc(x.candidate.listing.title) + "</h3>"
+          + '<div class="meta">Décision : <b>' + esc(x.status) + "</b> · " + esc(x.decidedAt || "") + "</div></div></div>";
+      }).join("")
+    : '<div class="empty">Aucune décision enregistrée.</div>';
+}
+
+function renderStats(){
+  var p = 0, a = 0, r = 0, f = 0;
+  state.items.forEach(function(x){
+    if (x.status === "pending") p++;
+    else if (x.status === "achete") a++;
+    else if (x.status === "rejete") r++;
+    else if (x.status === "faux") f++;
+  });
+  var decided = a + r + f;
+  var precision = decided ? Math.round(((a + r) / decided) * 100) : null;
+  $("statCards").innerHTML =
+    '<div class="stat"><div class="n">' + p + '</div><div class="l">En attente</div></div>'
+    + '<div class="stat"><div class="n">' + a + '</div><div class="l">Achetés</div></div>'
+    + '<div class="stat"><div class="n">' + r + '</div><div class="l">Vus-rejetés</div></div>'
+    + '<div class="stat"><div class="n">' + f + '</div><div class="l">Faux positifs</div></div>'
+    + '<div class="stat"><div class="n">' + (precision === null ? "—" : precision + " %") + '</div><div class="l">Candidats pertinents (calibration)</div></div>';
+  $("dashNote").textContent = decided
+    ? "Le taux de pertinence (non-faux-positifs) sert à resserrer les seuils du moteur chaque mois."
+    : "Les statistiques se remplissent avec tes décisions — elles sont le jeu de calibration du moteur.";
+}
+
+function renderAll(){ renderStats(); renderQueue(); renderDrafts(); renderHistory(); }
+
+async function refreshAll(){
+  try {
+    var data = await api("/candidates");
+    state.items = data.items || [];
+    state.health.api = true;
+  } catch (e) {
+    state.health.api = false;
+    console.warn("refresh:", e.message);
+  }
+  renderAll();
+  healthRender();
+}
+
+// ---- Actions -------------------------------------------------------------
+async function decide(id, decision){
+  try {
+    await api("/decision", { method: "POST", body: { id: id, decision: decision } });
+    await refreshAll();
+    if (decision === "achete") switchView("viewDrafts");
+  } catch (e) { alert("Échec : " + e.message); }
+}
+
+async function genDraft(id){
+  var it = state.items.find(function(x){ return x.id === id; });
+  if (!it) return;
+  var proxy = getSetting("proxy", "https://studio-brain.soaf01.workers.dev/ai");
+  var model = getSetting("model", "claude-sonnet-4-20250514");
+  var i = it.candidate.identification;
+  var wording = { prouvee: "de", attribuee: "attribué à", style: "dans le style de" }[i.attributionLevel] || "dans le style de";
+  var price = it.candidate.medianCompEur > 0
+    ? Math.round(it.candidate.medianCompEur * 0.95 / 10) * 10
+    : it.candidate.listing.priceEur * 3;
+  var prompt = "Rédige une annonce de revente honnête et vendeuse, en français.\n"
+    + "Pièce : " + i.summary + "\nDesigners/éditeurs : " + i.designersOrEditors.join(", ")
+    + "\nLibellé d'attribution OBLIGATOIRE : « " + wording + " [nom] » — jamais plus affirmatif.\n"
+    + "Détails constatés : " + i.detailsToVerify.join(" ; ") + "\nPrix : " + price + " €\n"
+    + "Titre ≤ 70 caractères ; 3 courts paragraphes (valeur, état sans rien masquer, conditions).\n"
+    + 'Réponds UNIQUEMENT ce JSON : {"title":"...","description":"..."}';
+  try {
+    var res = await fetch(proxy, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: model, max_tokens: 1500, messages: [{ role: "user", content: prompt }] })
+    });
+    if (!res.ok) throw new Error("proxy HTTP " + res.status);
+    var data = await res.json();
+    var text = "";
+    if (data && data.content && data.content.length) {
+      data.content.forEach(function(b){ if (b.type === "text") text += b.text; });
+    } else if (typeof data.text === "string") { text = data.text; }
+    var m = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+    var j = JSON.parse(m);
+    var draft = {
+      platform: it.candidate.sizeClass === "petit" ? "eBay (expédiable)" : "Selency / Leboncoin",
+      title: j.title, description: j.description, priceEur: price
+    };
+    await api("/draft", { method: "POST", body: { id: id, draft: draft } });
+    await refreshAll();
+  } catch (e) {
+    alert("Génération impossible : " + e.message + "\nVérifie l'URL du proxy IA dans Réglages.");
+  }
+}
+
+function copyDraft(id){
+  var el = $("draft-" + id);
+  if (!el) return;
+  try {
+    navigator.clipboard.writeText(el.textContent).then(function(){}, function(){ alert("Copie refusée par le navigateur."); });
+  } catch (e) { alert("Copie impossible : " + e.message); }
+}
+
+// ---- Navigation / thème --------------------------------------------------
+function switchView(id){
+  document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+  document.querySelectorAll("#nav button").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-view") === id);
+  });
+  var v = $(id);
+  if (v) v.classList.add("active");
+}
+
+function cycleTheme(){
+  var cur = document.documentElement.getAttribute("data-theme") || "dark";
+  var next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("soafaii_theme", next); } catch(e){ /* ignore */ }
+}
+
+// ---- SoafAii Health (léger) ---------------------------------------------
+var CRITICAL_IDS = ["nav", "statCards", "queueList", "draftsList", "historyList", "healthDot"];
+async function healthCheck(){
+  state.health.dom = CRITICAL_IDS.every(function(id){ return !!$(id); });
+  try {
+    var res = await fetch("/api/health");
+    state.health.api = res.ok;
+  } catch (e) { state.health.api = false; }
+  healthRender();
+}
+function healthRender(){
+  var ok = state.health.dom && state.health.api;
+  $("healthDot").className = "dot " + (ok ? "ok" : "bad");
+  $("healthLabel").textContent = "SoafAii Health — " + (ok ? "opérationnel" : (state.health.api ? "UI dégradée" : "API injoignable"));
+}
+
+// ---- Démarrage -----------------------------------------------------------
+document.addEventListener("DOMContentLoaded", function(){
+  $("gateBtn").addEventListener("click", tryLogin);
+  $("gatePass").addEventListener("keydown", function(e){ if (e.key === "Enter") tryLogin(); });
+  $("logoutBtn").addEventListener("click", logout);
+  $("themeBtn").addEventListener("click", cycleTheme);
+  $("nav").addEventListener("click", function(e){
+    var v = e.target && e.target.getAttribute && e.target.getAttribute("data-view");
+    if (v) switchView(v);
+  });
+  $("setProxy").value = getSetting("proxy", "https://studio-brain.soaf01.workers.dev/ai");
+  $("setModel").value = getSetting("model", "claude-sonnet-4-20250514");
+  $("saveSettings").addEventListener("click", function(){
+    setSetting("proxy", $("setProxy").value.trim());
+    setSetting("model", $("setModel").value.trim());
+    $("setMsg").textContent = "Enregistré.";
+  });
+
+  var saved = null;
+  try { saved = sessionStorage.getItem("pepites_key"); } catch(e){ /* ignore */ }
+  if (saved) {
+    state.key = saved;
+    $("gate").style.display = "none";
+    refreshAll();
+  }
+  healthCheck();
+  setInterval(healthCheck, 60000);
+  setInterval(function(){ if (state.key) refreshAll(); }, 120000);
+});
+</script>
+</body>
+</html>

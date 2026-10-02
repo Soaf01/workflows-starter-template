@@ -1,0 +1,21 @@
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"name": "pepites-api",
+	"main": "worker.js",
+	"compatibility_date": "2025-10-08",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "PEPITES_KV",
+			// À créer : npx wrangler kv namespace create PEPITES_KV — puis coller l'id ici.
+			"id": "REMPLACER_PAR_ID_KV"
+		}
+	],
+	"observability": { "enabled": true }
+	// Secrets à poser après le premier deploy :
+	//   npx wrangler secret put APP_KEY       (mot de passe de l'app)
+	//   npx wrangler secret put ENGINE_TOKEN  (jeton du moteur)
+}
