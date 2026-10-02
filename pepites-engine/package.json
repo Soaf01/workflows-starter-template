@@ -1,0 +1,20 @@
+{
+  "name": "pepites-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Moteur personnel de détection de design XXe sous-identifié sur les petites annonces (Flux B)",
+  "scripts": {
+    "build": "tsc",
+    "run": "node dist/index.js run",
+    "dry-run": "node dist/index.js run --dry-run",
+    "feedback": "node dist/index.js feedback"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

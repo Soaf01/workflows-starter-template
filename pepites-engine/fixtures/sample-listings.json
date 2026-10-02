@@ -1,0 +1,50 @@
+[
+  {
+    "id": "fixture:1",
+    "source": "fixtures",
+    "country": "FR",
+    "url": "https://example.com/annonce/1",
+    "title": "Fauteuil vintage années 50 bois courbé",
+    "description": "Fauteuil ancien de grenier, structure en contreplaqué moulé, à restaurer. Remise en main propre.",
+    "priceEur": 45,
+    "location": "Lyon",
+    "imageUrls": ["https://example.com/img/1a.jpg", "https://example.com/img/1b.jpg"],
+    "shippable": false
+  },
+  {
+    "id": "fixture:2",
+    "source": "fixtures",
+    "country": "FR",
+    "url": "https://example.com/annonce/2",
+    "title": "Lampadaire métal noir articulé",
+    "description": "Vieille lampe d'atelier, bras articulés, réflecteur en tôle. Fonctionne.",
+    "priceEur": 80,
+    "location": "Bordeaux",
+    "imageUrls": ["https://example.com/img/2a.jpg"],
+    "shippable": true
+  },
+  {
+    "id": "fixture:3",
+    "source": "fixtures",
+    "country": "FR",
+    "url": "https://example.com/annonce/3",
+    "title": "Fauteuil design Eames original Herman Miller",
+    "description": "Authentique fauteuil Eames, étiquette présente.",
+    "priceEur": 1500,
+    "location": "Paris",
+    "imageUrls": ["https://example.com/img/3a.jpg"],
+    "shippable": true
+  },
+  {
+    "id": "fixture:4",
+    "source": "fixtures",
+    "country": "FR",
+    "url": "https://example.com/annonce/4",
+    "title": "Étagère IKEA Billy blanche",
+    "description": "Étagère Billy en bon état.",
+    "priceEur": 20,
+    "location": "Nantes",
+    "imageUrls": ["https://example.com/img/4a.jpg"],
+    "shippable": false
+  }
+]

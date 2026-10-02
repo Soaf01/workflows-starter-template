@@ -1,0 +1,130 @@
+[
+  {
+    "name": "Jean Prouvé",
+    "era": "1930-1960",
+    "families": ["assise", "table", "bureau", "rangement"],
+    "editors": ["Ateliers Jean Prouvé", "Vitra (rééditions)"],
+    "signatureDetails": ["tôle d'acier pliée, soudures apparentes", "piètement compas", "patine industrielle, peinture d'origine souvent écaillée"],
+    "priceSignal": "chaise Standard d'époque 2-8 k€, pièces rares 6 chiffres"
+  },
+  {
+    "name": "Charlotte Perriand",
+    "era": "1940-1970",
+    "families": ["assise", "rangement", "table"],
+    "editors": ["Steph Simon", "Cassina (rééditions)"],
+    "signatureDetails": ["pin ou frêne massif, assemblages visibles", "formes libres", "bibliothèques à plots colorés"],
+    "priceSignal": "tabouret berger d'époque 2-10 k€"
+  },
+  {
+    "name": "Pierre Jeanneret",
+    "era": "1950-1965",
+    "families": ["assise", "bureau", "table"],
+    "editors": ["Chandigarh (pièces in situ)"],
+    "signatureDetails": ["teck massif, piètement compas en V", "cannage", "marquages d'inventaire peints au pochoir"],
+    "priceSignal": "fauteuil Chandigarh 3-15 k€"
+  },
+  {
+    "name": "Jean Royère",
+    "era": "1940-1960",
+    "families": ["assise", "luminaire"],
+    "editors": ["atelier propre"],
+    "signatureDetails": ["formes organiques généreuses (ours polaire)", "fer forgé fin pour luminaires", "boules laiton"],
+    "priceSignal": "6 chiffres pour les assises documentées"
+  },
+  {
+    "name": "Mathieu Matégot",
+    "era": "1950-1960",
+    "families": ["rangement", "table", "objet", "luminaire"],
+    "editors": ["Ateliers Matégot"],
+    "signatureDetails": ["tôle perforée (rigitulle)", "tripode", "couleurs vives d'origine"],
+    "priceSignal": "porte-revues/dessertes 500-5 k€"
+  },
+  {
+    "name": "Serge Mouille",
+    "era": "1950-1962",
+    "families": ["luminaire"],
+    "editors": ["atelier propre", "rééditions Gubi/Serge Mouille éditions"],
+    "signatureDetails": ["réflecteurs noirs en tôle formée à la main, intérieur blanc", "bras articulés fins", "rotules laiton"],
+    "priceSignal": "applique 2 bras d'époque 5-20 k€"
+  },
+  {
+    "name": "Charles & Ray Eames",
+    "era": "1945-1975",
+    "families": ["assise", "rangement"],
+    "editors": ["Herman Miller", "Vitra"],
+    "signatureDetails": ["étiquettes/estampilles Herman Miller ou Mobilier International", "coques fibre de verre premières éditions", "bases contract"],
+    "priceSignal": "coques 1ère génération 300-2 k€, lounge d'époque 3-8 k€"
+  },
+  {
+    "name": "Arne Jacobsen",
+    "era": "1950-1970",
+    "families": ["assise", "luminaire"],
+    "editors": ["Fritz Hansen", "Louis Poulsen"],
+    "signatureDetails": ["marquages Fritz Hansen datés sous l'assise", "contreplaqué moulé fin"],
+    "priceSignal": "Egg/Swan d'époque 2-8 k€"
+  },
+  {
+    "name": "Hans Wegner",
+    "era": "1950-1975",
+    "families": ["assise"],
+    "editors": ["Carl Hansen", "Johannes Hansen", "Getama"],
+    "signatureDetails": ["estampilles à chaud danoises", "assemblages bois massif impeccables", "cordage papier"],
+    "priceSignal": "fauteuils 800-10 k€ selon modèle"
+  },
+  {
+    "name": "Finn Juhl",
+    "era": "1945-1965",
+    "families": ["assise", "table"],
+    "editors": ["Niels Vodder", "France & Søn"],
+    "signatureDetails": ["assise flottante détachée de la structure", "teck sculpté"],
+    "priceSignal": "5-6 chiffres pour Niels Vodder"
+  },
+  {
+    "name": "Alvar Aalto",
+    "era": "1930-1970",
+    "families": ["assise", "table", "rangement", "luminaire"],
+    "editors": ["Artek"],
+    "signatureDetails": ["bouleau lamellé courbé", "étiquettes Artek anciennes", "piètement L"],
+    "priceSignal": "pièces anciennes Artek 300-5 k€"
+  },
+  {
+    "name": "Gio Ponti",
+    "era": "1935-1970",
+    "families": ["assise", "table", "luminaire", "objet"],
+    "editors": ["Cassina", "Fontana Arte", "Richard Ginori"],
+    "signatureDetails": ["Superleggera très fine et légère", "laiton + verre Fontana Arte", "céramiques marquées Ginori"],
+    "priceSignal": "Fontana Arte 5-6 chiffres possibles"
+  },
+  {
+    "name": "Osvaldo Borsani",
+    "era": "1950-1965",
+    "families": ["assise", "rangement"],
+    "editors": ["Tecno"],
+    "signatureDetails": ["mécanismes inclinables P40/D70", "logo Tecno 'T'"],
+    "priceSignal": "P40 2-6 k€"
+  },
+  {
+    "name": "Pierre Paulin",
+    "era": "1955-1975",
+    "families": ["assise"],
+    "editors": ["Artifort", "Thonet France"],
+    "signatureDetails": ["mousse + jersey tendu sur coque", "étiquettes Artifort"],
+    "priceSignal": "Mushroom/Tongue d'époque 800-4 k€"
+  },
+  {
+    "name": "Pierre Guariche",
+    "era": "1950-1965",
+    "families": ["assise", "luminaire"],
+    "editors": ["Steiner", "Airborne", "Disderot"],
+    "signatureDetails": ["contreplaqué moulé Steiner", "luminaires Disderot à contrepoids"],
+    "priceSignal": "luminaires 500-6 k€"
+  },
+  {
+    "name": "Greta Magnusson-Grossman",
+    "era": "1947-1960",
+    "families": ["luminaire", "bureau"],
+    "editors": ["Ralph O. Smith", "Glashütte (rééd. Gubi)"],
+    "signatureDetails": ["lampe Grasshopper tripode incliné", "réflecteurs tubulaires"],
+    "priceSignal": "pièces d'époque 2-10 k€"
+  }
+]
