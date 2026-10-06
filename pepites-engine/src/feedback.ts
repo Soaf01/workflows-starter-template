@@ -1,3 +1,4 @@
+import { sendDraftToDiscord } from "./discord.js";
 import { generateResaleDraft, resaleDraftMock } from "./resale.js";
 import { loadState, saveState } from "./store.js";
 import { answerCallback, getUpdates, sendResaleDraft, sendText } from "./telegram.js";
@@ -58,6 +59,7 @@ async function processWebappDecisions(dryRun: boolean): Promise<void> {
       try {
         const draft = dryRun ? resaleDraftMock(it.candidate) : await generateResaleDraft(it.candidate);
         await postDraft(it.id, draft);
+        await sendDraftToDiscord(draft);
       } catch (e) {
         console.warn(`[webapp] brouillon ${it.id} : ${(e as Error).message}`);
       }

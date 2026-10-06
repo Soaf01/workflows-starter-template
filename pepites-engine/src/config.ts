@@ -1,3 +1,21 @@
+import fs from "node:fs";
+
+// Charge ./.env (KEY=VALUE, une par ligne) sans dépendance — les variables
+// déjà présentes dans l'environnement gardent la priorité.
+(function loadDotEnv(): void {
+  try {
+    const raw = fs.readFileSync(".env", "utf-8");
+    for (const line of raw.split("\n")) {
+      const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
+      if (m && process.env[m[1]] === undefined) {
+        process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+      }
+    }
+  } catch {
+    /* pas de .env : variables d'environnement classiques */
+  }
+})();
+
 export interface SourceConfig {
   id: string;
   country: string;

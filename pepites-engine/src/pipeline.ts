@@ -6,6 +6,7 @@ import { passesAlertThreshold, score } from "./scoring.js";
 import { loadState, markSeen, saveState } from "./store.js";
 import { candidateCaption, sendCandidate } from "./telegram.js";
 import { postCandidate } from "./webapp.js";
+import { sendCandidateToDiscord } from "./discord.js";
 import { identify, identifyMock } from "./vision/identify.js";
 import { passesTriage, triage, triageMock } from "./vision/triage.js";
 import type { RawListing, ScoredCandidate } from "./types.js";
@@ -73,6 +74,7 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     } else {
       await sendCandidate(s); // Telegram (optionnel)
       await postCandidate(s); // Pépites Manager (optionnel)
+      await sendCandidateToDiscord(s); // Discord (optionnel)
     }
     state.pending[s.listing.id] = s;
     stats.alerted++;
