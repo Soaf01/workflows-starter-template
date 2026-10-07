@@ -10,6 +10,7 @@ export interface RawListing {
   imageUrls: string[];
   postedAt?: string;
   shippable?: boolean;
+  category?: string;
 }
 
 export interface TriageResult {

@@ -19,6 +19,10 @@ interface ApifyItem {
   body?: string;
   price?: number | string;
   location?: { city?: string } | string;
+  city?: string;
+  department?: string;
+  category?: string;
+  publishedAt?: string;
   images?: string[];
   imageUrls?: string[];
   shippable?: boolean;
@@ -129,7 +133,8 @@ function mapApifyItem(it: ApifyItem, src: SourceConfig): RawListing | null {
   if (!Number.isFinite(price)) return null;
   const images = it.images ?? it.imageUrls ?? [];
   const location =
-    typeof it.location === "string" ? it.location : (it.location?.city ?? "");
+    (typeof it.location === "string" ? it.location : it.location?.city) ??
+    [it.city, it.department].filter(Boolean).join(", ");
   return {
     id: `${src.id}:${String(it.id ?? urlStr)}`,
     source: src.id,
@@ -140,7 +145,9 @@ function mapApifyItem(it: ApifyItem, src: SourceConfig): RawListing | null {
     priceEur: price,
     location,
     imageUrls: images,
+    postedAt: it.publishedAt,
     shippable: it.shippable,
+    category: it.category,
   };
 }
 

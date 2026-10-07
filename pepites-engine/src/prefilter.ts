@@ -47,8 +47,25 @@ export interface PrefilterResult {
   reason: string;
 }
 
+// Catégories Leboncoin dans le périmètre — tout le reste (locations, autos,
+// emploi…) est écarté AVANT la vision, pour ne jamais brûler d'appel dessus.
+const CATEGORY_ALLOW = [
+  "ameublement",
+  "décoration",
+  "luminaire",
+  "antiquité",
+  "art",
+  "collection",
+];
+
 export function prefilter(l: RawListing, state: State): PrefilterResult {
   if (state.seen.includes(l.id)) return { pass: false, reason: "déjà vu" };
+  if (l.category) {
+    const c = l.category.toLowerCase();
+    if (!CATEGORY_ALLOW.some((a) => c.includes(a))) {
+      return { pass: false, reason: `catégorie hors périmètre (${l.category})` };
+    }
+  }
   if (l.priceEur > THRESHOLDS.maxAskPriceEur)
     return { pass: false, reason: `prix > ${THRESHOLDS.maxAskPriceEur} €` };
   if (l.imageUrls.length === 0) return { pass: false, reason: "sans photo" };
