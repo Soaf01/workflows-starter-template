@@ -3,6 +3,7 @@ import { compsMock, searchComps } from "./comps.js";
 import { ingest } from "./ingest.js";
 import { prefilter } from "./prefilter.js";
 import { passesAlertThreshold, score } from "./scoring.js";
+import { isAuthError, preflightAuth } from "./llm.js";
 import { loadState, markSeen, saveState } from "./store.js";
 import { candidateCaption, sendCandidate } from "./telegram.js";
 import { postCandidate } from "./webapp.js";
@@ -12,6 +13,7 @@ import { passesTriage, triage, triageMock } from "./vision/triage.js";
 import type { RawListing, ScoredCandidate } from "./types.js";
 
 export async function runPipeline(dryRun: boolean): Promise<void> {
+  if (!dryRun) await preflightAuth(); // avant l'ingestion : ne pas payer Apify avec une clé morte
   const state = loadState();
   const stats = { ingested: 0, prefiltered: 0, triaged: 0, identified: 0, alerted: 0 };
 
@@ -40,7 +42,14 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
       break;
     }
     state.counters.visionA++;
-    const t = dryRun ? triageMock(l) : await triage(l);
+    let t;
+    try {
+      t = dryRun ? triageMock(l) : await triage(l);
+    } catch (e) {
+      if (isAuthError(e)) throw e; // inutile de continuer, tout échouera
+      console.warn(`[triage] ${l.id} : ${(e as Error).message}`);
+      continue;
+    }
     if (!passesTriage(t)) continue;
     stats.triaged++;
 

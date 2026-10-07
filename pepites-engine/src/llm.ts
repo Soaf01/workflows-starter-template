@@ -1,10 +1,34 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { MODELS } from "./config.js";
 
 let client: Anthropic | null = null;
 
 export function getClient(): Anthropic {
   if (!client) client = new Anthropic();
   return client;
+}
+
+export function isAuthError(e: unknown): boolean {
+  return e instanceof Anthropic.AuthenticationError;
+}
+
+// Vérifie la clé AVANT de payer quoi que ce soit (count_tokens est gratuit).
+export async function preflightAuth(): Promise<void> {
+  try {
+    await getClient().messages.countTokens({
+      model: MODELS.triage,
+      messages: [{ role: "user", content: "ping" }],
+    });
+  } catch (e) {
+    if (isAuthError(e)) {
+      throw new Error(
+        "Clé Anthropic refusée (401). Vérifie la ligne ANTHROPIC_API_KEY du fichier .env : " +
+          "clé complète (commence par sk-ant-api...), sans guillemets, sans espace, sur une seule ligne, " +
+          "PAS une clé Admin (sk-ant-admin...). Au besoin, crée une nouvelle clé sur console.anthropic.com → API Keys.",
+      );
+    }
+    throw e;
+  }
 }
 
 // Les modèles répondent en JSON mais parfois entouré de texte : extraction tolérante.
