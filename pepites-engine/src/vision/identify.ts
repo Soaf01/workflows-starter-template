@@ -26,7 +26,7 @@ Règle stricte sur attributionLevel :
 - "style" sinon — y compris TOUT objet de grande distribution contemporaine (Ikea, Atmosphera, Maisons du Monde…) ou sans lien avec le design coté.
 Règle stricte sur confidence : c'est ta probabilité que la pièce soit RÉELLEMENT une pièce cotée attribuable (achat justifié). Objet de grande distribution ou quelconque = confidence 0.0 et designersOrEditors = [], même si ton analyse est certaine. Ce n'est PAS la confiance dans ton analyse.
 Réponds UNIQUEMENT ce JSON :
-{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte pour chercher les prix réalisés, ex. 'fauteuil Pierre Guariche Steiner'"}`;
+{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte EN ANGLAIS pour chercher les prix réalisés sur eBay, ex. 'Pierre Guariche armchair Steiner'"}`;
 }
 
 export async function identify(l: RawListing, t: TriageResult): Promise<Identification> {
