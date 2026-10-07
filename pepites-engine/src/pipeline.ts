@@ -33,10 +33,16 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     markSeen(state, l.id);
   }
   stats.prefiltered = survivors.length;
+  console.log(
+    `[pipeline] pré-filtre : ${survivors.length}/${listings.length} retenus — tri vision séquentiel (~5 s/annonce, soit ~${Math.ceil((survivors.length * 5) / 60)} min).`,
+  );
 
   // Étage 2A — triage vision (plafond dur)
   const scored: ScoredCandidate[] = [];
+  let progress = 0;
   for (const l of survivors) {
+    progress++;
+    if (progress % 10 === 0) console.log(`[triage] ${progress}/${survivors.length}…`);
     if (state.counters.visionA >= CAPS.visionAPerDay) {
       console.warn("[caps] Plafond vision A atteint — reste reporté à demain.");
       break;
@@ -52,6 +58,9 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     }
     if (!passesTriage(t)) continue;
     stats.triaged++;
+    console.log(
+      `[triage] candidat ${stats.triaged} : « ${l.title.slice(0, 60)} » (${t.family}, conf ${t.confidence}) — analyse approfondie…`,
+    );
 
     // Étage 2B — identification (plafond dur)
     if (state.counters.visionB >= CAPS.visionBPerDay) {

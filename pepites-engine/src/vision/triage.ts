@@ -14,11 +14,14 @@ export async function triage(l: RawListing): Promise<TriageResult> {
     { type: "image", source: { type: "url", url: l.imageUrls[0] } },
     { type: "text", text: `Titre : ${l.title}\n\n${PROMPT}` },
   ];
-  const resp = await client.messages.create({
-    model: MODELS.triage,
-    max_tokens: 200,
-    messages: [{ role: "user", content }],
-  });
+  const resp = await client.messages.create(
+    {
+      model: MODELS.triage,
+      max_tokens: 200,
+      messages: [{ role: "user", content }],
+    },
+    { timeout: 90_000 },
+  );
   const j = extractJson<{ candidat: boolean; famille: string; confiance: number }>(
     textOf(resp.content),
   );

@@ -50,7 +50,7 @@ export async function identify(l: RawListing, t: TriageResult): Promise<Identifi
     fallbacks: "default",
     messages: [{ role: "user", content }],
   } as unknown as Anthropic.Beta.Messages.MessageCreateParamsNonStreaming;
-  const resp = await client.beta.messages.create(params);
+  const resp = await client.beta.messages.create(params, { timeout: 240_000 });
   if (resp.stop_reason === "refusal") {
     throw new Error("Analyse refusée par le modèle (après fallback).");
   }
