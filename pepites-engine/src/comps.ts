@@ -11,21 +11,45 @@ import type { Comp } from "./types.js";
 
 interface SoldCompsItem {
   title?: string;
-  soldPrice?: number;
-  price?: number;
+  itemTitle?: string;
+  name?: string;
+  soldPrice?: number | string;
+  price?: number | string;
   currency?: string;
   soldDate?: string;
+  dateSold?: string;
   url?: string;
+  itemUrl?: string;
+  link?: string;
+}
+
+// Forme réelle vérifiée (07/10/2026) : GET api.sold-comps.com/v1/scrape
+// ?keyword=… , Bearer auth, réponse {keyword, page, totalItems, items:[…]}.
+// L'URL du .env est normalisée : tout query-string collé depuis les docs
+// (ex. ?keyword=iphone+15+pro) est retiré avant usage.
+function compsUrl(query: string): string | null {
+  const base = env("SOLDCOMPS_URL");
+  if (!base) return null;
+  const stripped = base.split("?")[0].replace(/\/$/, "");
+  return `${stripped}?keyword=${encodeURIComponent(query)}`;
+}
+
+function toPrice(p: number | string | undefined): number | null {
+  if (typeof p === "number") return p;
+  if (typeof p === "string") {
+    const n = Number.parseFloat(p.replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 export async function searchComps(query: string): Promise<Comp[]> {
   const key = env("SOLDCOMPS_KEY");
-  const base = env("SOLDCOMPS_URL");
-  if (!key || !base) {
+  const url = compsUrl(query);
+  if (!key || !url) {
     console.warn("[comps] SOLDCOMPS_KEY/SOLDCOMPS_URL absents — pas de comps automatiques.");
     return [];
   }
-  const url = `${base}?q=${encodeURIComponent(query)}`;
   const res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
   if (!res.ok) {
     console.warn(`[comps] HTTP ${res.status} — comps ignorés pour cette requête.`);
@@ -35,9 +59,15 @@ export async function searchComps(query: string): Promise<Comp[]> {
   const items = Array.isArray(data) ? data : (data.items ?? []);
   return items
     .map((it): Comp | null => {
-      const p = it.soldPrice ?? it.price;
-      if (!it.title || typeof p !== "number") return null;
-      return { title: it.title, soldPriceEur: p, soldAt: it.soldDate, url: it.url };
+      const title = it.title ?? it.itemTitle ?? it.name;
+      const price = toPrice(it.soldPrice ?? it.price);
+      if (!title || price === null) return null;
+      return {
+        title,
+        soldPriceEur: price,
+        soldAt: it.soldDate ?? it.dateSold,
+        url: it.url ?? it.itemUrl ?? it.link,
+      };
     })
     .filter((c): c is Comp => c !== null);
 }
@@ -47,12 +77,11 @@ export async function searchComps(query: string): Promise<Comp[]> {
 // tire — l'outil de diagnostic pour aligner l'intégration sur la vraie API.
 export async function debugComps(query: string): Promise<void> {
   const key = env("SOLDCOMPS_KEY");
-  const base = env("SOLDCOMPS_URL");
-  if (!key || !base) {
+  const url = compsUrl(query);
+  if (!key || !url) {
     console.log("[comps] SOLDCOMPS_URL / SOLDCOMPS_KEY absents du .env.");
     return;
   }
-  const url = `${base}?q=${encodeURIComponent(query)}`;
   console.log(`[comps] GET ${url}`);
   try {
     const res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
