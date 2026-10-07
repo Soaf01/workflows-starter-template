@@ -23,7 +23,8 @@ Tâche : dire si l'objet est plausiblement attribuable à un designer/éditeur c
 Règle stricte sur attributionLevel :
 - "prouvee" UNIQUEMENT si une étiquette, estampille ou marquage d'éditeur est visible sur les photos ;
 - "attribuee" si la construction et les détails correspondent fortement sans marquage visible ;
-- "style" sinon.
+- "style" sinon — y compris TOUT objet de grande distribution contemporaine (Ikea, Atmosphera, Maisons du Monde…) ou sans lien avec le design coté.
+Règle stricte sur confidence : c'est ta probabilité que la pièce soit RÉELLEMENT une pièce cotée attribuable (achat justifié). Objet de grande distribution ou quelconque = confidence 0.0 et designersOrEditors = [], même si ton analyse est certaine. Ce n'est PAS la confiance dans ton analyse.
 Réponds UNIQUEMENT ce JSON :
 {"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte pour chercher les prix réalisés, ex. 'fauteuil Pierre Guariche Steiner'"}`;
 }

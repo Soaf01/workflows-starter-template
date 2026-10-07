@@ -45,6 +45,10 @@ export function score(
 }
 
 export function passesAlertThreshold(s: ScoredCandidate): boolean {
+  // « style » = « dans le style de » : par définition pas une pièce attribuable,
+  // donc jamais d'alerte, quelle que soit la confiance du modèle.
+  if (s.identification.attributionLevel === "style") return false;
+  if (s.identification.designersOrEditors.length === 0) return false;
   if (s.identification.confidence < THRESHOLDS.minIdentConfidence) return false;
   // Sans comps, on alerte quand même si l'identification est forte : la
   // fourchette se vérifie à la main plutôt que de rater une vraie pièce.
