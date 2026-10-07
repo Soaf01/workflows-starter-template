@@ -3,16 +3,37 @@ import fs from "node:fs";
 // Charge ./.env (KEY=VALUE, une par ligne) sans dépendance — les variables
 // déjà présentes dans l'environnement gardent la priorité.
 (function loadDotEnv(): void {
+  let raw: string;
   try {
-    const raw = fs.readFileSync(".env", "utf-8");
-    for (const line of raw.split("\n")) {
-      const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
-      if (m && process.env[m[1]] === undefined) {
-        process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
-      }
-    }
+    raw = fs.readFileSync(".env", "utf-8");
   } catch {
-    /* pas de .env : variables d'environnement classiques */
+    return; /* pas de .env : variables d'environnement classiques */
+  }
+  if (raw.startsWith("{\\rtf")) {
+    console.warn(
+      "[env] ⚠️ .env a été sauvé au format RTF (TextEdit) — il est illisible. " +
+        "Dans TextEdit : Format → Convertir au format Texte, puis réenregistrer.",
+    );
+    return;
+  }
+  for (const line of raw.split(/\r?\n/)) {
+    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m) continue;
+    const value = m[2].replace(/^["']|["']$/g, "");
+    if (value === "") continue;
+    // Le .env du projet GAGNE sur une variable shell héritée : sur une machine
+    // qui a d'autres projets Anthropic, une vieille clé exportée dans ~/.zshrc
+    // écraserait silencieusement celle-ci (cause classique de 401).
+    if (process.env[m[1]] !== undefined && process.env[m[1]] !== value) {
+      console.warn(`[env] ${m[1]} du shell remplacé par la valeur du .env du projet.`);
+    }
+    process.env[m[1]] = value;
+  }
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (key && !key.startsWith("sk-ant-")) {
+    console.warn(
+      `[env] ⚠️ ANTHROPIC_API_KEY ne ressemble pas à une clé (commence par « ${key.slice(0, 6)}… ») — caractères invisibles ou copie partielle ?`,
+    );
   }
 })();
 

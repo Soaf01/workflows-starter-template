@@ -21,10 +21,12 @@ export async function preflightAuth(): Promise<void> {
     });
   } catch (e) {
     if (isAuthError(e)) {
+      const k = process.env.ANTHROPIC_API_KEY;
+      const used = k ? `${k.slice(0, 14)}… (${k.length} caractères)` : "AUCUNE (ni .env ni shell)";
       throw new Error(
-        "Clé Anthropic refusée (401). Vérifie la ligne ANTHROPIC_API_KEY du fichier .env : " +
-          "clé complète (commence par sk-ant-api...), sans guillemets, sans espace, sur une seule ligne, " +
-          "PAS une clé Admin (sk-ant-admin...). Au besoin, crée une nouvelle clé sur console.anthropic.com → API Keys.",
+        `Clé Anthropic refusée (401). Clé effectivement utilisée : ${used}. ` +
+          "Vérifie la ligne ANTHROPIC_API_KEY du .env : clé complète (sk-ant-api…), sans guillemets ni espace, " +
+          "PAS une clé Admin (sk-ant-admin…), et que le fichier est bien en texte brut.",
       );
     }
     throw e;
