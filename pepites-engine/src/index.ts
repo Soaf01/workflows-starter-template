@@ -1,3 +1,4 @@
+import { debugComps } from "./comps.js";
 import { processFeedback } from "./feedback.js";
 import { probeApify } from "./ingest.js";
 import { runPipeline } from "./pipeline.js";
@@ -13,8 +14,13 @@ async function main(): Promise<void> {
     await processFeedback(dryRun);
   } else if (command === "probe") {
     await probeApify();
+  } else if (command === "comps") {
+    const query = args.filter((a) => !a.startsWith("--") && a !== "comps").join(" ") || "fauteuil guariche";
+    await debugComps(query);
   } else {
-    console.error(`Commande inconnue : ${command}. Usage : run [--dry-run] | feedback [--dry-run] | probe`);
+    console.error(
+      `Commande inconnue : ${command}. Usage : run [--dry-run] | feedback [--dry-run] | probe | comps <requête>`,
+    );
     process.exitCode = 2;
   }
 }

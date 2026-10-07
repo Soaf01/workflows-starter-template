@@ -42,6 +42,31 @@ export async function searchComps(query: string): Promise<Comp[]> {
     .filter((c): c is Comp => c !== null);
 }
 
+// `npm run comps -- "ta requête"` : appelle l'API avec tes identifiants et
+// montre le statut HTTP, le début du corps brut, puis ce que le mapping en
+// tire — l'outil de diagnostic pour aligner l'intégration sur la vraie API.
+export async function debugComps(query: string): Promise<void> {
+  const key = env("SOLDCOMPS_KEY");
+  const base = env("SOLDCOMPS_URL");
+  if (!key || !base) {
+    console.log("[comps] SOLDCOMPS_URL / SOLDCOMPS_KEY absents du .env.");
+    return;
+  }
+  const url = `${base}?q=${encodeURIComponent(query)}`;
+  console.log(`[comps] GET ${url}`);
+  try {
+    const res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
+    const body = await res.text();
+    console.log(`[comps] HTTP ${res.status}`);
+    console.log(`[comps] Corps brut (1500 premiers caractères) :\n${body.slice(0, 1500)}`);
+    const parsed = await searchComps(query);
+    console.log(`[comps] Mapping actuel : ${parsed.length} comp(s) extraits.`);
+    if (parsed.length > 0) console.log(JSON.stringify(parsed.slice(0, 3), null, 2));
+  } catch (e) {
+    console.log(`[comps] Échec réseau : ${(e as Error).message}`);
+  }
+}
+
 export function compsMock(): Comp[] {
   return [
     { title: "Comp mock A", soldPriceEur: 900 },

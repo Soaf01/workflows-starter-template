@@ -9,7 +9,8 @@
     "run": "node dist/index.js run",
     "dry-run": "node dist/index.js run --dry-run",
     "feedback": "node dist/index.js feedback",
-    "probe": "node dist/index.js probe"
+    "probe": "node dist/index.js probe",
+    "comps": "node dist/index.js comps"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0"
