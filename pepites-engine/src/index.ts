@@ -1,4 +1,5 @@
 import { processFeedback } from "./feedback.js";
+import { probeApify } from "./ingest.js";
 import { runPipeline } from "./pipeline.js";
 
 const args = process.argv.slice(2);
@@ -10,8 +11,10 @@ async function main(): Promise<void> {
     await runPipeline(dryRun);
   } else if (command === "feedback") {
     await processFeedback(dryRun);
+  } else if (command === "probe") {
+    await probeApify();
   } else {
-    console.error(`Commande inconnue : ${command}. Usage : run [--dry-run] | feedback [--dry-run]`);
+    console.error(`Commande inconnue : ${command}. Usage : run [--dry-run] | feedback [--dry-run] | probe`);
     process.exitCode = 2;
   }
 }

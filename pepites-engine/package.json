@@ -8,7 +8,8 @@
     "build": "tsc",
     "run": "node dist/index.js run",
     "dry-run": "node dist/index.js run --dry-run",
-    "feedback": "node dist/index.js feedback"
+    "feedback": "node dist/index.js feedback",
+    "probe": "node dist/index.js probe"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0"

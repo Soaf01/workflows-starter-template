@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { env, type SourceConfig } from "./config.js";
+import { env, SOURCES, type SourceConfig } from "./config.js";
 import type { RawListing } from "./types.js";
 
 // --- Adaptateur Apify -------------------------------------------------------
@@ -28,7 +28,19 @@ function actorEnvName(sourceId: string): string {
   return `APIFY_ACTOR_${sourceId.toUpperCase().replace(/-/g, "_")}`;
 }
 
-async function fetchFromApify(src: SourceConfig): Promise<RawListing[]> {
+// Si un fichier apify-input.json existe à la racine du moteur, son contenu
+// remplace l'input par défaut envoyé à l'acteur — copier/coller l'exemple
+// d'input depuis l'onglet « Input » de l'acteur sur Apify, aucun code à changer.
+function apifyInputFor(src: SourceConfig): Record<string, unknown> {
+  try {
+    const raw = fs.readFileSync("apify-input.json", "utf-8");
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return { queries: src.keywords, maxItems: 500 };
+  }
+}
+
+export async function fetchApifyRaw(src: SourceConfig, maxItems?: number): Promise<ApifyItem[]> {
   const token = env("APIFY_TOKEN");
   const actor = env(actorEnvName(src.id));
   if (!token || !actor) {
@@ -37,19 +49,49 @@ async function fetchFromApify(src: SourceConfig): Promise<RawListing[]> {
     );
     return [];
   }
+  const input = apifyInputFor(src);
+  if (maxItems !== undefined) input.maxItems = maxItems;
   const url = `https://api.apify.com/v2/acts/${encodeURIComponent(actor)}/run-sync-get-dataset-items?token=${token}`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ queries: src.keywords, maxItems: 500 }),
+    body: JSON.stringify(input),
   });
   if (!res.ok) {
     throw new Error(`[ingest] Apify ${src.id} : HTTP ${res.status} ${await res.text()}`);
   }
-  const items = (await res.json()) as ApifyItem[];
+  return (await res.json()) as ApifyItem[];
+}
+
+async function fetchFromApify(src: SourceConfig): Promise<RawListing[]> {
+  const items = await fetchApifyRaw(src);
   return items
     .map((it) => mapApifyItem(it, src))
     .filter((l): l is RawListing => l !== null);
+}
+
+// `npm run probe` : appelle l'acteur avec 5 items max et montre le brut et
+// le mappé — c'est le test de compatibilité avant le premier vrai run.
+export async function probeApify(): Promise<void> {
+  const src = SOURCES[0];
+  const items = await fetchApifyRaw(src, 5);
+  console.log(`[probe] ${items.length} item(s) brut(s) reçus de l'acteur.`);
+  if (items.length > 0) {
+    console.log("[probe] Premier item brut :");
+    console.log(JSON.stringify(items[0], null, 2).slice(0, 3000));
+  }
+  const mapped = items
+    .map((it) => mapApifyItem(it, src))
+    .filter((l): l is RawListing => l !== null);
+  console.log(`[probe] ${mapped.length}/${items.length} mappé(s) avec succès.`);
+  if (mapped.length > 0) {
+    console.log("[probe] Premier item mappé :");
+    console.log(JSON.stringify(mapped[0], null, 2));
+  } else if (items.length > 0) {
+    console.log(
+      "[probe] ⚠️ Rien de mappé — envoie-moi le premier item brut ci-dessus pour que j'ajuste le mapping.",
+    );
+  }
 }
 
 function mapApifyItem(it: ApifyItem, src: SourceConfig): RawListing | null {
