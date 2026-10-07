@@ -9,6 +9,8 @@ import type { Comp } from "./types.js";
 // à vérifier dans leur documentation à l'inscription — le code ci-dessous
 // lit le chemin dans SOLDCOMPS_URL pour ne rien figer de non vérifié.
 
+// Champs réels vérifiés sur un item live le 07/10/2026 : soldPrice (string),
+// soldCurrency ("USD"), endedAt ("2026-09-28"), url, title, bestOfferAccepted.
 interface SoldCompsItem {
   title?: string;
   itemTitle?: string;
@@ -16,11 +18,28 @@ interface SoldCompsItem {
   soldPrice?: number | string;
   price?: number | string;
   currency?: string;
+  soldCurrency?: string;
   soldDate?: string;
   dateSold?: string;
+  endedAt?: string;
   url?: string;
   itemUrl?: string;
   link?: string;
+  bestOfferAccepted?: boolean;
+}
+
+// Conversion vers EUR — taux approximatifs, ajustables dans .env
+// (FX_USD_EUR, FX_GBP_EUR). L'API renvoie de l'eBay US, donc des USD.
+function fxToEur(currency: string | undefined): number {
+  const c = (currency ?? "EUR").toUpperCase();
+  if (c === "EUR") return 1;
+  const envRate = (name: string, fallback: number): number => {
+    const r = Number.parseFloat(env(name) ?? "");
+    return Number.isFinite(r) && r > 0 ? r : fallback;
+  };
+  if (c === "USD") return envRate("FX_USD_EUR", 0.9);
+  if (c === "GBP") return envRate("FX_GBP_EUR", 1.15);
+  return 1;
 }
 
 // Forme réelle vérifiée (07/10/2026) : GET api.sold-comps.com/v1/scrape
@@ -62,10 +81,12 @@ export async function searchComps(query: string): Promise<Comp[]> {
       const title = it.title ?? it.itemTitle ?? it.name;
       const price = toPrice(it.soldPrice ?? it.price);
       if (!title || price === null) return null;
+      // bestOfferAccepted : eBay affiche le prix demandé, pas l'offre acceptée
+      // (inconnue) — le comp est donc un plafond ; la médiane amortit le biais.
       return {
         title,
-        soldPriceEur: price,
-        soldAt: it.soldDate ?? it.dateSold,
+        soldPriceEur: Math.round(price * fxToEur(it.soldCurrency ?? it.currency)),
+        soldAt: it.soldDate ?? it.dateSold ?? it.endedAt,
         url: it.url ?? it.itemUrl ?? it.link,
       };
     })
