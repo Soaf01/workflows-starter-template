@@ -52,15 +52,41 @@ export async function fetchApifyRaw(src: SourceConfig, maxItems?: number): Promi
   const input = apifyInputFor(src);
   if (maxItems !== undefined) input.maxItems = maxItems;
   const url = `https://api.apify.com/v2/acts/${encodeURIComponent(actor)}/run-sync-get-dataset-items?token=${token}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  console.log(
+    `[ingest] ${src.id} : appel de l'acteur ${actor} (input : ${JSON.stringify(input).slice(0, 200)}…) — peut prendre 1 à 4 min, patience.`,
+  );
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 270_000);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    throw new Error(
+      `[ingest] Apify ${src.id} : appel interrompu après ${Math.round((Date.now() - started) / 1000)} s (${(e as Error).message}). ` +
+        `Si cela se répète, l'acteur est trop lent en mode synchrone — réduire les mots-clés ou utiliser apify-input.json.`,
+    );
+  }
+  clearTimeout(timer);
   if (!res.ok) {
     throw new Error(`[ingest] Apify ${src.id} : HTTP ${res.status} ${await res.text()}`);
   }
-  return (await res.json()) as ApifyItem[];
+  const items = (await res.json()) as ApifyItem[];
+  console.log(
+    `[ingest] ${src.id} : ${items.length} item(s) reçus en ${Math.round((Date.now() - started) / 1000)} s.`,
+  );
+  if (items.length === 0) {
+    console.warn(
+      `[ingest] ${src.id} : 0 item — l'input par défaut ne convient probablement pas à cet acteur. Lance « npm run probe » et envoie-moi la sortie.`,
+    );
+  }
+  return items;
 }
 
 async function fetchFromApify(src: SourceConfig): Promise<RawListing[]> {
