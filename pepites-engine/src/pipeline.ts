@@ -27,11 +27,13 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
   stats.ingested = listings.length;
 
   // Pré-filtre texte (gratuit)
+  // Les refusés sont marqués vus tout de suite ; les retenus seulement une
+  // fois réellement analysés — sinon un plafond atteint les perdrait en silence.
   const survivors: RawListing[] = [];
   for (const l of listings) {
     const r = prefilter(l, state);
     if (r.pass) survivors.push(l);
-    markSeen(state, l.id);
+    else markSeen(state, l.id);
   }
   stats.prefiltered = survivors.length;
   console.log(
@@ -50,6 +52,7 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
       break;
     }
     state.counters.visionA++;
+    markSeen(state, l.id); // analysé (ou tenté) — ne reviendra plus
     let t;
     try {
       t = dryRun ? triageMock(l) : await triage(l);
