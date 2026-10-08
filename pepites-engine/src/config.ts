@@ -107,6 +107,13 @@ export function env(name: string): string | undefined {
   return v && v.length > 0 ? v : undefined;
 }
 
+// Mode découverte : quand rien ne passe le seuil d'alerte, envoyer quand même
+// le meilleur candidat identifié du passage, étiqueté « DÉCOUVERTE » — utile
+// pendant la calibration pour voir des résultats réels. DISCOVERY_MODE=0 pour couper.
+export function discoveryMode(): boolean {
+  return env("DISCOVERY_MODE") !== "0";
+}
+
 export function requireEnv(name: string): string {
   const v = env(name);
   if (!v) throw new Error(`Variable d'environnement manquante : ${name}`);

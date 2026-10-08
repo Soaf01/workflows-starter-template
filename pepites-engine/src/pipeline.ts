@@ -1,4 +1,4 @@
-import { CAPS, SOURCES, THRESHOLDS } from "./config.js";
+import { CAPS, discoveryMode, SOURCES, THRESHOLDS } from "./config.js";
 import { compsMock, searchComps } from "./comps.js";
 import { ingest } from "./ingest.js";
 import { prefilter } from "./prefilter.js";
@@ -39,6 +39,7 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
 
   // Étage 2A — triage vision (plafond dur)
   const scored: ScoredCandidate[] = [];
+  const identifiedAll: ScoredCandidate[] = [];
   let progress = 0;
   for (const l of survivors) {
     progress++;
@@ -80,12 +81,24 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     // Étage 3 — comps + scoring
     const comps = dryRun ? compsMock() : await searchComps(ident.compsQuery);
     const s = score(l, t, ident, comps);
+    identifiedAll.push(s);
     if (passesAlertThreshold(s)) scored.push(s);
   }
 
-  // Étage 4 — alertes (top N)
+  // Étage 4 — alertes (top N) ; mode découverte si rien ne passe le seuil
   scored.sort((a, b) => b.score - a.score);
-  const top = scored.slice(0, THRESHOLDS.maxAlertsPerRun);
+  let top = scored.slice(0, THRESHOLDS.maxAlertsPerRun);
+  if (top.length === 0 && identifiedAll.length > 0 && discoveryMode()) {
+    const best = [...identifiedAll].sort((a, b) => {
+      const aStyle = a.identification.attributionLevel === "style" ? 1 : 0;
+      const bStyle = b.identification.attributionLevel === "style" ? 1 : 0;
+      if (aStyle !== bStyle) return aStyle - bStyle;
+      return b.identification.confidence - a.identification.confidence || b.score - a.score;
+    })[0];
+    best.identification.summary = `👁 DÉCOUVERTE (sous le seuil d'alerte — sert la calibration, pas une recommandation d'achat) : ${best.identification.summary}`;
+    top = [best];
+    console.log("[pipeline] mode découverte : meilleur candidat du passage envoyé malgré le seuil.");
+  }
   for (const s of top) {
     if (dryRun) {
       console.log(`\n=== ALERTE (dry-run) ===\n${candidateCaption(s)}\n`);
