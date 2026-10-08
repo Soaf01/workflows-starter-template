@@ -47,6 +47,7 @@ export function score(
 export function passesAlertThreshold(s: ScoredCandidate): boolean {
   // « style » = « dans le style de » : par définition pas une pièce attribuable,
   // donc jamais d'alerte, quelle que soit la confiance du modèle.
+  if ((s.identification.scamRisk ?? 0) >= 0.6) return false;
   if (s.identification.attributionLevel === "style") return false;
   if (s.identification.designersOrEditors.length === 0) return false;
   if (s.identification.confidence < THRESHOLDS.minIdentConfidence) return false;

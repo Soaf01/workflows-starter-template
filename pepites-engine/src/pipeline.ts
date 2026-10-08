@@ -4,6 +4,7 @@ import { ingest } from "./ingest.js";
 import { prefilter } from "./prefilter.js";
 import { passesAlertThreshold, score } from "./scoring.js";
 import { isAuthError, preflightAuth } from "./llm.js";
+import { combinedScamRisk, heuristicScamFlags } from "./scam.js";
 import { loadState, markSeen, saveState } from "./store.js";
 import { candidateCaption, sendCandidate } from "./telegram.js";
 import { postCandidate } from "./webapp.js";
@@ -78,9 +79,20 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     }
     stats.identified++;
 
-    // Étage 3 — comps + scoring
+    // Étage 3 — comps + scoring + fusion anti-arnaque
     const comps = dryRun ? compsMock() : await searchComps(ident.compsQuery);
     const s = score(l, t, ident, comps);
+    const heurFlags = heuristicScamFlags(l, s.medianCompEur);
+    const allFlags = [...(s.identification.scamFlags ?? []), ...heurFlags];
+    const risk = combinedScamRisk(s.identification.scamRisk, heurFlags);
+    s.identification.scamRisk = risk;
+    s.identification.scamFlags = allFlags;
+    if (risk >= 0.6) {
+      s.identification.summary = `🚨 RISQUE D'ARNAQUE ${Math.round(risk * 100)} % — NE PAS ACHETER sans lever chaque signal : ${s.identification.summary}`;
+      console.log(`[scam] ${l.id} écarté des alertes (risque ${risk.toFixed(2)} : ${allFlags.join(" · ")})`);
+    } else if (allFlags.length > 0) {
+      s.identification.summary = `${s.identification.summary} ⚠️ Signaux à lever : ${allFlags.join(" · ")}`;
+    }
     identifiedAll.push(s);
     if (passesAlertThreshold(s)) scored.push(s);
   }
@@ -90,6 +102,9 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
   let top = scored.slice(0, THRESHOLDS.maxAlertsPerRun);
   if (top.length === 0 && identifiedAll.length > 0 && discoveryMode()) {
     const best = [...identifiedAll].sort((a, b) => {
+      const aRisk = (a.identification.scamRisk ?? 0) >= 0.6 ? 1 : 0;
+      const bRisk = (b.identification.scamRisk ?? 0) >= 0.6 ? 1 : 0;
+      if (aRisk !== bRisk) return aRisk - bRisk;
       const aStyle = a.identification.attributionLevel === "style" ? 1 : 0;
       const bStyle = b.identification.attributionLevel === "style" ? 1 : 0;
       if (aStyle !== bStyle) return aStyle - bStyle;

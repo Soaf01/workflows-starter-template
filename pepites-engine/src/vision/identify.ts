@@ -25,8 +25,13 @@ Règle stricte sur attributionLevel :
 - "attribuee" si la construction et les détails correspondent fortement sans marquage visible ;
 - "style" sinon — y compris TOUT objet de grande distribution contemporaine (Ikea, Atmosphera, Maisons du Monde…) ou sans lien avec le design coté.
 Règle stricte sur confidence : c'est ta probabilité que la pièce soit RÉELLEMENT une pièce cotée attribuable (achat justifié). Objet de grande distribution ou quelconque = confidence 0.0 et designersOrEditors = [], même si ton analyse est certaine. Ce n'est PAS la confiance dans ton analyse.
+Analyse anti-arnaque OBLIGATOIRE des photos (aucun indice isolé n'est une preuve — accumule) :
+- photo volée : capture d'écran d'un site marchand, filigrane/watermark, photo de catalogue professionnelle incompatible avec un vendeur particulier, photos aux sols/murs/éclairages incohérents entre elles (sources différentes) ;
+- image générée par IA : texte ou logos déformés, ombres/reflets incompatibles avec une source lumineuse unique, textures trop lisses sans aucune imperfection réelle, géométrie impossible, motifs dupliqués ;
+- scamRisk = ta probabilité que l'annonce soit frauduleuse (objet inexistant, photos volées/générées) ; scamFlags = les indices constatés, en français, courts.
+
 Réponds UNIQUEMENT ce JSON :
-{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte EN ANGLAIS pour chercher les prix réalisés sur eBay, ex. 'Pierre Guariche armchair Steiner'"}`;
+{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte EN ANGLAIS pour chercher les prix réalisés sur eBay, ex. 'Pierre Guariche armchair Steiner'", "scamRisk": 0.0-1.0, "scamFlags": ["..."]}`;
 }
 
 export async function identify(l: RawListing, t: TriageResult): Promise<Identification> {
@@ -70,5 +75,7 @@ export function identifyMock(l: RawListing, t: TriageResult): Identification {
     detailsToVerify: ["marquage éditeur sous l'assise", "visserie d'époque"],
     questionsForSeller: ["Photo du dessous ?", "Étiquette ou tampon visible ?"],
     compsQuery: `${t.family} design 1950 vintage`,
+    scamRisk: 0.05,
+    scamFlags: [],
   };
 }

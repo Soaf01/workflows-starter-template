@@ -30,6 +30,8 @@ export interface Identification {
   detailsToVerify: string[];
   questionsForSeller: string[];
   compsQuery: string; // requête de recherche de prix réalisés
+  scamRisk?: number; // 0..1 — probabilité que l'annonce soit frauduleuse
+  scamFlags?: string[]; // signaux visuels + heuristiques
 }
 
 export interface Comp {
