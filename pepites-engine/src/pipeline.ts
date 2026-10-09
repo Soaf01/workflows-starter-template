@@ -109,6 +109,12 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     } else if (allFlags.length > 0) {
       s.identification.summary = `${s.identification.summary} ⚠️ Signaux à lever : ${allFlags.join(" · ")}`;
     }
+    // Sans comps eBay mais avec une cote modèle : la valeur reste visible.
+    const iLow = s.identification.marketLowEur ?? 0;
+    const iHigh = s.identification.marketHighEur ?? 0;
+    if (s.comps.length === 0 && iHigh > 0) {
+      s.identification.summary = `${s.identification.summary} 💶 Cote estimée par le modèle : ${iLow}–${iHigh} € (pas de comps eBay sur ce passage — à vérifier) · gain net potentiel ≈ ${s.estimatedNetGainEur} €`;
+    }
     identifiedAll.push(s);
     if (passesAlertThreshold(s)) scored.push(s);
   }

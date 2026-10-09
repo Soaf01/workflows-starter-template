@@ -32,6 +32,8 @@ export interface Identification {
   compsQuery: string; // requête de recherche de prix réalisés
   scamRisk?: number; // 0..1 — probabilité que l'annonce soit frauduleuse
   scamFlags?: string[]; // signaux visuels + heuristiques
+  marketLowEur?: number; // fourchette de cote estimée par le modèle (fallback sans comps)
+  marketHighEur?: number;
 }
 
 export interface Comp {

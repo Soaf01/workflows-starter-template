@@ -31,7 +31,9 @@ Analyse anti-arnaque OBLIGATOIRE des photos (aucun indice isolé n'est une preuv
 - scamRisk = ta probabilité que l'annonce soit frauduleuse (objet inexistant, photos volées/générées) ; scamFlags = les indices constatés, en français, courts.
 
 Réponds UNIQUEMENT ce JSON :
-{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte EN ANGLAIS pour chercher les prix réalisés sur eBay, ex. 'Pierre Guariche armchair Steiner'", "scamRisk": 0.0-1.0, "scamFlags": ["..."]}`;
+{"summary": "...", "designersOrEditors": ["..."], "attributionLevel": "prouvee"|"attribuee"|"style", "confidence": 0.0-1.0, "detailsToVerify": ["..."], "questionsForSeller": ["..."], "compsQuery": "requête courte EN ANGLAIS pour chercher les prix réalisés sur eBay, ex. 'Pierre Guariche armchair Steiner'", "scamRisk": 0.0-1.0, "scamFlags": ["..."], "marketLowEur": nombre, "marketHighEur": nombre}
+
+marketLowEur/marketHighEur : ta fourchette de prix de MARCHÉ en euros pour la pièce telle que vue (ventes d'occasion récentes typiques, état compris), même approximative — 0 et 0 si l'objet n'a pas de cote.`;
 }
 
 export async function identify(l: RawListing, t: TriageResult): Promise<Identification> {
@@ -77,5 +79,7 @@ export function identifyMock(l: RawListing, t: TriageResult): Identification {
     compsQuery: `${t.family} design 1950 vintage`,
     scamRisk: 0.05,
     scamFlags: [],
+    marketLowEur: 400,
+    marketHighEur: 900,
   };
 }

@@ -62,6 +62,16 @@ function toPrice(p: number | string | undefined): number | null {
   return null;
 }
 
+// Rythme : l'API limite les rafales (429 constaté à 24 requêtes d'affilée).
+// Espacement minimal + un retry après pause + cache par requête sur le run.
+const MIN_GAP_MS = 4000;
+let lastCallAt = 0;
+const runCache = new Map<string, Comp[]>();
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export async function searchComps(query: string): Promise<Comp[]> {
   const key = env("SOLDCOMPS_KEY");
   const url = compsUrl(query);
@@ -69,14 +79,27 @@ export async function searchComps(query: string): Promise<Comp[]> {
     console.warn("[comps] SOLDCOMPS_KEY/SOLDCOMPS_URL absents — pas de comps automatiques.");
     return [];
   }
-  const res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
+  const cached = runCache.get(query);
+  if (cached) return cached;
+
+  const wait = lastCallAt + MIN_GAP_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastCallAt = Date.now();
+
+  let res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
+  if (res.status === 429) {
+    console.warn("[comps] HTTP 429 — pause 15 s puis nouvel essai.");
+    await sleep(15_000);
+    lastCallAt = Date.now();
+    res = await fetch(url, { headers: { authorization: `Bearer ${key}` } });
+  }
   if (!res.ok) {
     console.warn(`[comps] HTTP ${res.status} — comps ignorés pour cette requête.`);
     return [];
   }
   const data = (await res.json()) as { items?: SoldCompsItem[] } | SoldCompsItem[];
   const items = Array.isArray(data) ? data : (data.items ?? []);
-  return items
+  const comps = items
     .map((it): Comp | null => {
       const title = it.title ?? it.itemTitle ?? it.name;
       const price = toPrice(it.soldPrice ?? it.price);
@@ -91,6 +114,8 @@ export async function searchComps(query: string): Promise<Comp[]> {
       };
     })
     .filter((c): c is Comp => c !== null);
+  runCache.set(query, comps);
+  return comps;
 }
 
 // `npm run comps -- "ta requête"` : appelle l'API avec tes identifiants et
