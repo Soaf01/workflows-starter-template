@@ -11,7 +11,7 @@ import { postCandidate } from "./webapp.js";
 import { sendCandidateToDiscord } from "./discord.js";
 import { identify, identifyMock } from "./vision/identify.js";
 import { passesTriage, triage, triageMock } from "./vision/triage.js";
-import type { RawListing, ScoredCandidate } from "./types.js";
+import type { RawListing, ScoredCandidate, TriageResult } from "./types.js";
 
 export async function runPipeline(dryRun: boolean): Promise<void> {
   if (!dryRun) await preflightAuth(); // avant l'ingestion : ne pas payer Apify avec une clé morte
@@ -40,9 +40,12 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     `[pipeline] pré-filtre : ${survivors.length}/${listings.length} retenus — tri vision séquentiel (~5 s/annonce, soit ~${Math.ceil((survivors.length * 5) / 60)} min).`,
   );
 
-  // Étage 2A — triage vision (plafond dur)
+  // Étage 2A — triage vision de TOUT le passage d'abord ; l'étage cher ne
+  // traite ensuite que les meilleurs candidats, classés par promesse — les
+  // créneaux quotidiens ne partent plus au premier venu de la matinée.
   const scored: ScoredCandidate[] = [];
   const identifiedAll: ScoredCandidate[] = [];
+  const candidates: Array<{ l: RawListing; t: TriageResult }> = [];
   let progress = 0;
   for (const l of survivors) {
     progress++;
@@ -63,16 +66,26 @@ export async function runPipeline(dryRun: boolean): Promise<void> {
     }
     if (!passesTriage(t)) continue;
     stats.triaged++;
+    candidates.push({ l, t });
+  }
+  candidates.sort((a, b) => b.t.confidence - a.t.confidence);
+  if (candidates.length > 0) {
+    const slots = Math.max(0, CAPS.visionBPerDay - state.counters.visionB);
     console.log(
-      `[triage] candidat ${stats.triaged} : « ${l.title.slice(0, 60)} » (${t.family}, conf ${t.confidence}) — analyse approfondie…`,
+      `[triage] ${candidates.length} candidat(s) — analyse approfondie des ${Math.min(slots, candidates.length)} plus prometteurs (budget restant : ${slots}).`,
     );
+  }
 
-    // Étage 2B — identification (plafond dur)
+  // Étage 2B — identification des meilleurs (plafond dur)
+  for (const { l, t } of candidates) {
     if (state.counters.visionB >= CAPS.visionBPerDay) {
-      console.warn("[caps] Plafond vision B atteint — reste reporté à demain.");
+      console.warn("[caps] Plafond vision B atteint — meilleurs servis d'abord, reste demain.");
       break;
     }
     state.counters.visionB++;
+    console.log(
+      `[identify] « ${l.title.slice(0, 60)} » (${t.family}, conf ${t.confidence})…`,
+    );
     let ident;
     try {
       ident = dryRun ? identifyMock(l, t) : await identify(l, t);

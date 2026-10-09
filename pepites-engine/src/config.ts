@@ -55,16 +55,25 @@ export const SOURCES: SourceConfig[] = [
     country: "FR",
     language: "fr",
     adapter: "apify",
+    // Vocabulaire « adjacent à la valeur » : les mots qu'emploie un vendeur
+    // qui ne sait pas ce qu'il a, mais qui décrivent des pièces cotées —
+    // jamais de nom de designer (annonce déjà au prix).
     keywords: [
-      "fauteuil vintage",
-      "chaise ancienne",
-      "lampadaire",
-      "lampe ancienne",
-      "enfilade",
-      "bureau vintage",
-      "étagère métal",
-      "table basse vintage",
-      "meuble ancien",
+      "fauteuil années 50",
+      "fauteuil années 60",
+      "fauteuil scandinave vintage",
+      "chaise bois courbé",
+      "lampadaire tripode",
+      "lampe d'atelier",
+      "applique potence",
+      "lampadaire laiton vintage",
+      "enfilade scandinave",
+      "enfilade teck",
+      "bureau années 50",
+      "étagère tôle perforée",
+      "meuble de métier",
+      "fauteuil rotin vintage",
+      "table basse teck",
     ],
     requireShippable: false,
   },
@@ -77,7 +86,7 @@ export const THRESHOLDS = {
   // Pré-filtre
   maxAskPriceEur: 800, // au-delà, le vendeur sait ce qu'il vend
   // Vision
-  triageMinConfidence: 0.3, // laxiste exprès : rappel > précision
+  triageMinConfidence: 0.4, // les créneaux chers vont aux candidats classés — barre un cran plus haute
   // Alerte
   minNetGainEur: 300,
   minIdentConfidence: 0.5,
@@ -87,7 +96,7 @@ export const THRESHOLDS = {
 // Plafonds durs d'appels/jour — protège contre la dérive de coût.
 export const CAPS = {
   visionAPerDay: 300,
-  visionBPerDay: 15,
+  visionBPerDay: 24, // ~1,5 €/jour au pire — les créneaux vont aux mieux classés
 };
 
 export const COSTS = {
