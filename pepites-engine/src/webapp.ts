@@ -6,10 +6,11 @@ import type { ResaleDraft, ScoredCandidate } from "./types.js";
 
 export interface WebappItem {
   id: string;
-  status: "pending" | "achete" | "rejete" | "faux";
+  status: "pending" | "achete" | "rejete" | "faux" | "expiree";
   decidedAt: string | null;
   draft: ResaleDraft | null;
   candidate: ScoredCandidate;
+  receivedAt?: string;
 }
 
 function base(): { url: string; token: string } | null {
@@ -47,6 +48,18 @@ export async function postCandidate(s: ScoredCandidate): Promise<void> {
 export async function fetchUnprocessedDecisions(): Promise<WebappItem[]> {
   const data = await call<{ items: WebappItem[] }>("/api/decisions");
   return data?.items ?? [];
+}
+
+export async function fetchPendingCandidates(): Promise<WebappItem[]> {
+  const data = await call<{ items: WebappItem[] }>("/api/candidates");
+  return (data?.items ?? []).filter((it) => it.status === "pending");
+}
+
+export async function postExpired(id: string): Promise<void> {
+  await call("/api/decision", {
+    method: "POST",
+    body: JSON.stringify({ id, decision: "expiree" }),
+  });
 }
 
 export async function postDraft(id: string, draft: ResaleDraft): Promise<void> {

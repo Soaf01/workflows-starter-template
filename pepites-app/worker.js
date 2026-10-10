@@ -82,9 +82,11 @@ async function handleApi(request, env, path) {
     return json({ ok: true });
   }
 
-  // --- App : liste complète -------------------------------------------
+  // --- App ou moteur : liste complète -----------------------------------
   if (path === "/api/candidates" && method === "GET") {
-    if (!isApp(request, env)) return json({ error: "unauthorized" }, 401);
+    if (!isApp(request, env) && !isEngine(request, env)) {
+      return json({ error: "unauthorized" }, 401);
+    }
     const idx = await getIndex(env);
     const items = [];
     for (const id of idx) {
@@ -94,9 +96,11 @@ async function handleApi(request, env, path) {
     return json({ items });
   }
 
-  // --- App : décision ---------------------------------------------------
+  // --- App ou moteur : décision (le moteur ne pose que « expiree ») ------
   if (path === "/api/decision" && method === "POST") {
-    if (!isApp(request, env)) return json({ error: "unauthorized" }, 401);
+    const fromApp = isApp(request, env);
+    const fromEngine = isEngine(request, env);
+    if (!fromApp && !fromEngine) return json({ error: "unauthorized" }, 401);
     let body;
     try {
       body = await request.json();
@@ -104,7 +108,8 @@ async function handleApi(request, env, path) {
       return json({ error: "bad json" }, 400);
     }
     const { id, decision } = body || {};
-    if (!id || !["achete", "rejete", "faux"].includes(decision)) {
+    const allowed = fromApp ? ["achete", "rejete", "faux", "expiree"] : ["expiree"];
+    if (!id || !allowed.includes(decision)) {
       return json({ error: "id/decision invalides" }, 400);
     }
     const item = await getItem(env, id);

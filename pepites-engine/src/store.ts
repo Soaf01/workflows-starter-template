@@ -10,6 +10,7 @@ export interface State {
   // l'annonce de revente au clic "Acheté".
   pending: Record<string, ScoredCandidate>;
   telegramOffset: number;
+  staleChecks: Record<string, string>; // id → dernière vérification de fraîcheur
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -27,6 +28,7 @@ export function loadState(): State {
     if (s.counters.date !== today()) {
       s.counters = { date: today(), visionA: 0, visionB: 0 };
     }
+    s.staleChecks ??= {}; // états écrits avant l'ajout du champ
     return s;
   } catch {
     return {
@@ -35,6 +37,7 @@ export function loadState(): State {
       decisions: {},
       pending: {},
       telegramOffset: 0,
+      staleChecks: {},
     };
   }
 }

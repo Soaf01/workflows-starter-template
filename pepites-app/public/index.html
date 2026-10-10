@@ -277,12 +277,13 @@ function renderHistory(){
 }
 
 function renderStats(){
-  var p = 0, a = 0, r = 0, f = 0;
+  var p = 0, a = 0, r = 0, f = 0, e = 0;
   state.items.forEach(function(x){
     if (x.status === "pending") p++;
     else if (x.status === "achete") a++;
     else if (x.status === "rejete") r++;
     else if (x.status === "faux") f++;
+    else if (x.status === "expiree") e++;
   });
   var decided = a + r + f;
   var precision = decided ? Math.round(((a + r) / decided) * 100) : null;
@@ -291,6 +292,7 @@ function renderStats(){
     + '<div class="stat"><div class="n">' + a + '</div><div class="l">Achetés</div></div>'
     + '<div class="stat"><div class="n">' + r + '</div><div class="l">Vus-rejetés</div></div>'
     + '<div class="stat"><div class="n">' + f + '</div><div class="l">Faux positifs</div></div>'
+    + '<div class="stat"><div class="n">' + e + '</div><div class="l">Expirées (parties avant toi)</div></div>'
     + '<div class="stat"><div class="n">' + (precision === null ? "—" : precision + " %") + '</div><div class="l">Candidats pertinents (calibration)</div></div>';
   $("dashNote").textContent = decided
     ? "Le taux de pertinence (non-faux-positifs) sert à resserrer les seuils du moteur chaque mois."

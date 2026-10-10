@@ -63,4 +63,4 @@ export interface ResaleDraft {
   priceEur: number;
 }
 
-export type Decision = "achete" | "rejete" | "faux";
+export type Decision = "achete" | "rejete" | "faux" | "expiree";
