@@ -40,9 +40,10 @@ function apifyInputFor(src: SourceConfig): Record<string, unknown> {
     const raw = fs.readFileSync("apify-input.json", "utf-8");
     return JSON.parse(raw) as Record<string, unknown>;
   } catch {
-    // maxItems modéré : l'endpoint synchrone d'Apify coupe vers ~5 min, et le
-    // probe a mesuré ~100 s de démarrage — 150 items passent, 500 risquent non.
-    return { queries: src.keywords, maxItems: 150 };
+    // maxItems modéré : (1) l'endpoint synchrone coupe vers ~5 min ; (2) chaque
+    // résultat est FACTURÉ par l'acteur, et les passages suivants re-paient
+    // largement les mêmes annonces — 100/passage × 3 passages/j tient le budget.
+    return { queries: src.keywords, maxItems: 100 };
   }
 }
 
